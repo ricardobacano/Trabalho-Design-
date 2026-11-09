@@ -1,0 +1,40 @@
+@startuml
+title Abertura e encaminhamento de chamado
+
+actor Solicitante
+boundary "Interface web" as UI
+control "AbrirChamado" as UC
+control "CatalogoEquipes" as Catalogo
+control "PoliticaPrioridade" as Prioridade
+control "PoliticaSLA" as SLA
+database "Repositórios" as Repo
+control "NotificacaoInterna" as Notif
+
+note over Solicitante,UI
+  Pré-condição: solicitante autenticado.
+end note
+
+Solicitante -> UI: preencher e enviar chamado
+UI -> UC: abrir(dados, usuarioAutenticado)
+UC -> UC: validar campos e permissão
+UC -> Catalogo: obterEquipePadrao(categoria)
+Catalogo --> UC: equipe ou sem correspondência
+UC -> Prioridade: calcular(impacto, urgencia)
+Prioridade --> UC: prioridade
+UC -> SLA: criarAcompanhamento(prioridade, calendario)
+SLA --> UC: prazos e relógios
+UC -> Repo: salvar(chamado, evento de criação)
+
+alt categoria possui equipe padrão
+  Repo --> UC: chamado salvo na fila da equipe
+  UC -> Notif: notificarEquipe(chamado)
+else categoria sem equipe válida
+  Repo --> UC: chamado salvo na fila de triagem
+  UC -> Notif: notificarCoordenador(chamado)
+end
+
+UC -> Notif: confirmarAbertura(solicitante, chamado)
+UC --> UI: protocolo, prioridade e estado
+UI --> Solicitante: exibir confirmação
+@enduml
+
