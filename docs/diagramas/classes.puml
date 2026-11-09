@@ -1,0 +1,155 @@
+@startuml
+title Modelo de domínio — Sistema de Chamados
+hide methods
+skinparam classAttributeIconSize 0
+
+enum Papel {
+  SOLICITANTE
+  TECNICO
+  COORDENADOR
+}
+
+enum EstadoChamado {
+  EM_FILA
+  EM_ATENDIMENTO
+  AGUARDANDO_SOLICITANTE
+  AGUARDANDO_TERCEIRO
+  RESOLVIDO
+  FECHADO
+  CANCELADO
+}
+
+enum Impacto {
+  BAIXO
+  MEDIO
+  ALTO
+}
+
+enum Urgencia {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum Prioridade {
+  P1_CRITICA
+  P2_ALTA
+  P3_MEDIA
+  P4_BAIXA
+}
+
+enum VisibilidadeInteracao {
+  PUBLICA
+  INTERNA
+}
+
+class Usuario {
+  id: UUID
+  nome: String
+  email: String
+  ativo: Boolean
+  papeis: Set<Papel>
+}
+
+class Equipe {
+  id: UUID
+  nome: String
+  ativa: Boolean
+}
+
+class MembroEquipe {
+  ativo: Boolean
+  desde: DateTime
+}
+
+class Categoria {
+  id: UUID
+  nome: String
+  descricao: String
+}
+
+class Chamado {
+  id: UUID
+  resumo: String
+  descricao: String
+  estado: EstadoChamado
+  impacto: Impacto
+  urgencia: Urgencia
+  prioridade: Prioridade
+  criadoEm: DateTime
+  primeiraRespostaEm: DateTime?
+  resolvidoEm: DateTime?
+  fechadoEm: DateTime?
+}
+
+class Interacao {
+  id: UUID
+  conteudo: String
+  visibilidade: VisibilidadeInteracao
+  criadoEm: DateTime
+}
+
+class EventoHistorico {
+  id: UUID
+  tipo: String
+  detalhes: String
+  criadoEm: DateTime
+}
+
+class PoliticaSLA {
+  prioridade: Prioridade
+  metaPrimeiraResposta: Duration
+  metaResolucao: Duration
+  inicioExpediente: Time
+  fimExpediente: Time
+  fusoHorario: String
+}
+
+class AcompanhamentoSLA {
+  prazoPrimeiraResposta: DateTime
+  prazoResolucao: DateTime
+  pausadoDesde: DateTime?
+  situacaoPrimeiraResposta: String
+  situacaoResolucao: String
+}
+
+class MatrizPrioridade <<serviço de domínio>> {
+  +calcular(impacto, urgencia): Prioridade
+}
+
+Usuario "1" <-- "0..*" Chamado : solicitante
+Usuario "1" <-- "0..*" Chamado : registradoPor
+Usuario "0..1" <-- "0..*" Chamado : tecnicoResponsavel
+
+Equipe "1" *-- "1..*" MembroEquipe
+Usuario "1" <-- "0..*" MembroEquipe : tecnico
+Equipe "0..1" <-- "0..*" Chamado : equipeResponsavel
+Equipe "0..1" <-- "0..*" Categoria : equipePadrao
+Categoria "1" <-- "0..*" Chamado : categoria
+
+Chamado "1" *-- "0..*" Interacao
+Usuario "1" <-- "0..*" Interacao : autor
+Chamado "1" *-- "0..*" EventoHistorico
+Usuario "1" <-- "0..*" EventoHistorico : ator
+
+Chamado "1" *-- "1" AcompanhamentoSLA
+PoliticaSLA "1" <-- "0..*" AcompanhamentoSLA : politicaAplicada
+MatrizPrioridade ..> Impacto
+MatrizPrioridade ..> Urgencia
+MatrizPrioridade ..> Prioridade
+
+note right of Categoria
+  No MVP, cada categoria possui
+  uma equipe padrão fixa.
+  Sem correspondência válida,
+  o coordenador faz a triagem.
+end note
+
+note bottom of AcompanhamentoSLA
+  Calendário: seg-sex, 08:00-18:00,
+  America/Sao_Paulo.
+  Aguardando solicitante/terceiro
+  pausa o relógio de resolução.
+end note
+@enduml
+
