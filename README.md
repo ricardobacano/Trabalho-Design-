@@ -1,6 +1,6 @@
 # Sistema de Gerenciamento de Chamados de Suporte Técnico
 
-Projeto final da disciplina **Design de Software — Tema 16**.
+Projeto final da disciplina **Design de Software 
 
 ## Visão geral
 
@@ -67,14 +67,6 @@ O escopo e os tempos de SLA ainda devem ser validados com a professora.
 ```
 
 Os ADRs sobre autenticação e persistência serão criados quando as decisões correspondentes forem confirmadas.
-
-## Desenvolvimento
-
-O grupo pretende integrar o trabalho por Pull Requests:
-
-- `main`: versão estável para entrega.
-- `develop`: integração do trabalho.
-- `feature/*`, `docs/*` e `fix/*`: branches curtas para tarefas.
 
 A stack e as instruções para executar a aplicação serão adicionadas ao README assim que forem definidas e o esqueleto do projeto estiver disponível.
 
