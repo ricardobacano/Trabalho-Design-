@@ -1,7 +1,6 @@
 # Prioridade, SLA e ciclo de vida do chamado
 
-**Projeto:** Sistema de Gerenciamento de Chamados de Suporte Técnico
-**Status:** versão revisada conforme decisões do grupo
+
 **Observação:** a matriz e os tempos abaixo são uma política inicial do projeto, inspirada em práticas de gestão de serviços. Não são apresentados como valores obrigatórios do ITIL.
 
 ## 1. Objetivo

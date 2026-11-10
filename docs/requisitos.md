@@ -1,7 +1,5 @@
 # Requisitos, escopo e regras de negócio
 
-**Projeto:** Sistema de Gerenciamento de Chamados de Suporte Técnico
-**Tema:** 16
 **Status:** versão revisada com as decisões já informadas pelo grupo
 
 ## 1. Objetivo
