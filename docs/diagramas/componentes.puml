@@ -1,0 +1,55 @@
+@startuml
+title Componentes — Monólito modular em camadas
+skinparam componentStyle rectangle
+
+package "Apresentação" {
+  component "Interface Web" as Web
+  component "Controladores" as Controllers
+}
+
+package "Aplicação" {
+  component "Casos de uso\nAbrir / assumir / resolver" as UseCases
+  component "Autorização" as Authz
+}
+
+package "Domínio" {
+  component "Atendimento" as Atendimento
+  component "Matriz de Prioridade" as Priority
+  component "Política de SLA" as SLA
+  component "Catálogo e Equipes" as Catalog
+}
+
+package "Portas" {
+  interface "ChamadoRepository" as TicketPort
+  interface "CatalogoRepository" as CatalogPort
+  interface "NotificacaoPort" as NotificationPort
+}
+
+package "Infraestrutura" {
+  component "Repositórios concretos" as Repositories
+  database "Banco de dados" as DB
+  component "Notificações internas\n(simuladas)" as Notifications
+}
+
+Web --> Controllers
+Controllers --> UseCases
+UseCases --> Authz
+UseCases --> Atendimento
+UseCases --> Catalog
+UseCases --> Priority
+UseCases --> SLA
+UseCases --> TicketPort
+UseCases --> CatalogPort
+UseCases --> NotificationPort
+
+Repositories ..|> TicketPort
+Repositories ..|> CatalogPort
+Repositories --> DB
+Notifications ..|> NotificationPort
+
+note right of UseCases
+  Um único processo e implantação.
+  Módulos são separações de código,
+  não serviços independentes.
+end note
+@enduml

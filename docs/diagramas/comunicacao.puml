@@ -1,0 +1,45 @@
+@startuml
+title Diagrama de comunicação — abertura de chamado
+left to right direction
+
+skinparam linetype polyline
+skinparam nodesep 60
+skinparam ranksep 70
+
+object "solicitante: Usuario" as Solicitante
+object "interface: TelaChamado" as Tela
+object "casoDeUso: AbrirChamado" as Caso
+
+object "catalogo: CatalogoEquipes" as Catalogo
+object "prioridade: MatrizPrioridade" as Matriz
+object "sla: PoliticaSLA" as SLA
+object "repositorio: ChamadoRepository" as Repo
+object "notificacao: NotificacaoInterna" as Notif
+
+' Orienta o posicionamento dos objetos
+Solicitante -[hidden]right-> Tela
+Tela -[hidden]right-> Caso
+Caso -[hidden]right-> Catalogo
+Catalogo -[hidden]down-> Matriz
+Matriz -[hidden]down-> SLA
+SLA -[hidden]down-> Repo
+Repo -[hidden]down-> Notif
+
+' Mensagens do fluxo
+Solicitante --> Tela : 1. enviar(dados)
+Tela --> Caso : 2. abrir(dados, usuario)
+
+Caso --> Catalogo : 3. buscarEquipe(categoria)
+Caso --> Matriz : 4. calcular(impacto, urgencia)
+Caso --> SLA : 5. iniciar(prioridade, calendario)
+Caso --> Repo : 6. salvar(chamado, historico)
+Caso --> Notif : 7. notificar(equipe ou coordenador)
+
+Caso --> Tela : 8. retornar(protocolo, prioridade, estado)
+Tela --> Solicitante : 9. mostrarConfirmacao()
+
+note bottom of Caso
+  O solicitante já está autenticado.
+  Sem equipe mapeada, o chamado segue para triagem.
+end note
+@enduml

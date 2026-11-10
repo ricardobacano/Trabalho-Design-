@@ -1,7 +1,5 @@
 # Requisitos, escopo e regras de negócio
 
-**Projeto:** Sistema de Gerenciamento de Chamados de Suporte Técnico  
-**Tema:** 16  
 **Status:** versão revisada com as decisões já informadas pelo grupo
 
 ## 1. Objetivo
@@ -159,4 +157,3 @@ As escolhas recebidas do grupo foram incorporadas como regras do MVP:
 ## 11. Limites e evolução
 
 A prioridade do grupo é demonstrar o ciclo completo do chamado com regras consistentes. Funcionalidades fora do MVP podem ser citadas em evolução futura, mas não devem atrasar a entrega dos requisitos centrais. Toda mudança de escopo deve ser refletida nos requisitos, nos diagramas, nos testes e no README.
-
