@@ -1,112 +1,127 @@
-# Arquitetura proposta
+# Arquitetura da solução
 
-**Projeto:** Sistema de Gerenciamento de Chamados de Suporte Técnico
-**Tema:** 16
-**Status:** proposta para revisão do grupo
-**Decisão relacionada:** [ADR-001 — Arquitetura da aplicação](adr/ADR-001-arquitetura.md)
+## 1. Visão geral
 
-## 1. Objetivo
+A solução combina:
 
-Definir uma estrutura que permita implementar e testar o fluxo de chamados com responsabilidades separadas. A proposta usa um **monólito modular organizado em camadas**: uma aplicação implantável, dividida em módulos de domínio e com dependências controladas.
+- **cliente-servidor**: navegador acessa a aplicação Flask por HTTP;
+- **monólito modular**: catálogo, chamados e notificações são módulos do mesmo
+  processo e da mesma implantação;
+- **organização em camadas**: apresentação, aplicação, domínio e infraestrutura;
+- **MVC na apresentação**: rotas controlam requisições, modelos fornecem dados e
+  templates Jinja renderizam as páginas.
 
-O GLPI é referência de domínio e processo. Esta proposta descreve a arquitetura do projeto acadêmico e não presume como o GLPI é implementado internamente.
+Não há uma camada denominada “Portas”. A interface **Notificador** é um contrato
+específico exigido pela variação da integração externa, e não uma adoção de
+Arquitetura Hexagonal.
 
-## 2. Contexto e premissas
+## 2. Módulos
 
-- O grupo desenvolverá uma única aplicação para o MVP.
-- O fluxo principal envolve solicitantes autenticados, técnicos, equipes, categorias, chamados, SLA e histórico.
-- O volume e a necessidade de implantação são compatíveis com uma aplicação única.
-- Os limites entre módulos ainda podem mudar conforme o domínio for detalhado.
-- Notificações externas reais estão fora do MVP; notificações internas serão simuladas.
-- Banco de dados, linguagem e framework ainda serão escolhidos pelo grupo.
-
-## 3. Visão em camadas
-
-1. **Apresentação:** interface web, controladores e validação de entrada. Converte requisições em comandos de aplicação e apresenta resultados.
-2. **Aplicação:** casos de uso, autorização e coordenação das operações. Exemplos: abrir chamado, assumir chamado, comentar, resolver, fechar e reabrir.
-3. **Domínio:** entidades e regras que não dependem de interface nem de tecnologia. Inclui transições de estado, prioridade, visibilidade de interação e cálculo de SLA.
-4. **Infraestrutura:** implementações concretas de persistência, autenticação, calendário e notificações internas.
-
-### Regra de dependência
-
-A apresentação chama casos de uso. Casos de uso dependem de contratos definidos para persistência e notificações. O domínio não depende de banco, framework web ou provedor de e-mail. A infraestrutura implementa os contratos usados pela aplicação.
-
-## 4. Módulos de domínio sugeridos
-
-| Módulo | Responsabilidade | Principais conceitos |
+| Módulo | Responsabilidade | Código |
 |---|---|---|
-| **Identidade e acesso** | Login, papéis, associação entre técnico e equipe e autorização. | Usuário, Papel, MembroEquipe |
-| **Atendimento** | Abrir, encaminhar, assumir, comentar, resolver, fechar e cancelar chamados. | Chamado, Interação, EventoHistorico |
-| **Catálogo e equipes** | Categorias e mapeamento fixo categoria → equipe no MVP; fila de triagem. | Categoria, Equipe |
-| **Prioridade e SLA** | Calcular prioridade e prazos com calendário comercial, incluindo pausas. | MatrizPrioridade, PoliticaSLA, AcompanhamentoSLA |
-| **Notificações** | Gerar notificações internas simuladas a partir de eventos de atendimento. | Notificacao |
+| Chamados | Abertura, prioridade, prazo, histórico, consulta e regras do chamado. | **app/chamados** |
+| Catálogo | Usuários de demonstração, categorias e equipes. | **app/catalogo** |
+| Notificações | Contrato de confirmação e implementação simulada. | **app/notificacoes** |
+| Infraestrutura comum | Inicialização e sessão do banco SQLite. | **app/banco.py** |
 
-Esses módulos podem ser pacotes da mesma aplicação; não são serviços separados nem exigem implantação independente.
+Os módulos compartilham o processo e a transação local. Eles não são
+microsserviços e não possuem implantação ou bancos independentes.
 
-## 5. Fluxo arquitetural: abertura de chamado
+## 3. Camadas e dependências
 
-1. Um solicitante autenticado envia resumo, descrição, categoria, impacto e urgência.
-2. A camada de apresentação encaminha a solicitação ao caso de uso de abertura.
-3. O caso de uso verifica a permissão e valida os dados.
-4. O módulo de catálogo obtém a equipe padrão da categoria. Sem correspondência, o chamado vai à fila de triagem do coordenador.
-5. A política de prioridade calcula a prioridade.
-6. A política de SLA cria os prazos conforme prioridade e calendário comercial.
-7. O caso de uso persiste chamado e evento de histórico pelas interfaces de repositório.
-8. Uma notificação interna simulada é gerada para a equipe/coordenador e o solicitante recebe a confirmação na aplicação.
+### Apresentação
 
-O diagrama está em [`diagramas/sequencia.puml`](diagramas/sequencia.puml).
+**app/chamados/apresentacao.py** recebe HTTP, converte campos do formulário em um
+comando e apresenta resultados. Não contém matriz de prioridade nem SQL.
 
-## 6. Contratos e infraestrutura
+### Aplicação
 
-A camada de aplicação deve consumir abstrações como:
+**AbrirChamadoService** coordena a abertura. Ele consulta o solicitante e a
+categoria, pede a criação do chamado, solicita persistência e aciona a notificação.
+**ConsultarChamadosService** coordena lista e detalhe e sempre informa o
+solicitante ao repositório.
 
-- repositório de chamados;
-- repositório de categorias/equipes;
-- repositório de interações e eventos, caso não façam parte do agregado de Chamado;
-- serviço de autenticação/autorização;
-- política de prioridade e política de SLA;
-- serviço de notificações internas;
-- relógio/calendário comercial, para tornar testes de prazo determinísticos.
+### Domínio
 
-A escolha de banco deve ser feita depois de confirmar a linguagem e o ambiente de execução. O diagrama de componentes em [`diagramas/componentes.puml`](diagramas/componentes.puml) mostra as dependências lógicas sem impor tecnologia.
+**Chamado**, **MatrizPrioridade**, **PoliticaPrazo** e **EventoHistorico** mantêm as
+regras que não dependem de HTTP ou templates.
 
-## 7. Segurança e autorização
+### Infraestrutura
 
-- Todas as ações protegidas exigem usuário autenticado.
-- O solicitante consulta apenas chamados associados à sua conta.
-- Técnicos consultam a fila das equipes às quais pertencem.
-- Coordenadores podem tratar a fila de triagem e reatribuir chamados.
-- Anotações internas não são retornadas ao solicitante.
-- Senhas, se armazenadas localmente, devem ser persistidas com hash seguro; nunca em texto puro.
-- A autorização deve ocorrer na aplicação/servidor, não apenas ocultando opções na interface.
+Os repositórios SQLAlchemy convertem e persistem os objetos no SQLite.
+**NotificadorFake** simula a dependência de confirmação.
 
-## 8. Qualidades arquiteturais priorizadas
+Fluxo de dependência:
 
-| Qualidade | Escolha que ajuda |
+~~~text
+Navegador
+  -> Apresentação
+  -> Aplicação
+  -> Domínio
+  -> Persistência SQLAlchemy
+  -> SQLite
+~~~
+
+A aplicação também depende da interface **Notificador**, cuja implementação
+simulada é escolhida na criação da aplicação.
+
+## 4. Fluxo implementado de abertura
+
+1. O solicitante de demonstração preenche o formulário.
+2. A apresentação valida a forma dos dados e cria **AbrirChamadoComando**.
+3. **AbrirChamadoService** busca o solicitante e a categoria pelos repositórios do
+   catálogo.
+4. **Chamado.abrir** valida os dados, calcula prioridade e prazo e define o estado.
+5. **EventoHistorico.abertura** descreve o evento inicial.
+6. O repositório grava chamado e histórico em uma única transação.
+7. O serviço solicita confirmação ao **Notificador**.
+8. A aplicação retorna o protocolo e exibe o detalhe persistido.
+
+Se a categoria não tiver equipe, o chamado é criado em **EM_TRIAGEM**. Se a
+notificação falhar, o chamado permanece gravado e a interface apresenta um aviso.
+
+## 5. Comunicação
+
+- Navegador e aplicação comunicam-se de forma síncrona por HTTP.
+- Chamadas entre módulos são chamadas locais no mesmo processo.
+- SQLAlchemy comunica-se com SQLite de forma síncrona.
+- A notificação do protótipo também é síncrona, mas ocorre depois da transação.
+- Não existem broker, fila, RPC ou chamadas de rede internas.
+
+## 6. Persistência
+
+O protótipo utiliza um banco SQLite compartilhado. As tabelas principais são:
+
+- **usuarios**;
+- **equipes**;
+- **categorias**;
+- **chamados**;
+- **eventos_historico**.
+
+Chamado e evento de abertura são confirmados pelo mesmo commit. Uma exceção durante
+a gravação provoca rollback dos dois registros.
+
+## 7. Integração externa
+
+**Notificador** possui somente a operação **confirmar_abertura**.
+**NotificadorFake** registra confirmações em memória. Uma implementação futura pode
+enviar e-mail ou mensagem sem alterar o fluxo de abertura.
+
+## 8. Implantação
+
+A implantação do protótipo contém:
+
+~~~text
+[Navegador] -> [Processo Flask] -> [Arquivo SQLite]
+~~~
+
+Essa forma é suficiente para demonstração local. Uma implantação institucional
+deveria usar servidor WSGI, banco gerenciado, configuração externa e autenticação.
+
+## 9. Relação com os ASRs
+
+| ASR | Resposta arquitetural |
 |---|---|
-| **Manutenibilidade** | Casos de uso, regras de domínio e infraestrutura separados. |
-| **Testabilidade** | Regras de prioridade e transição testadas sem interface ou banco real. |
-| **Segurança** | Permissões verificadas nos casos de uso e visibilidade aplicada no servidor. |
-| **Consistência** | Chamado, histórico e prazos gravados na mesma operação lógica quando possível. |
-| **Simplicidade de implantação** | Um artefato da aplicação e uma base de dados para o MVP. |
-
-## 9. Implantação do MVP
-
-A implantação lógica contém uma aplicação e um banco de dados. Não são necessários microserviços, broker de mensagens ou integração de e-mail para demonstrar os requisitos atuais. A infraestrutura concreta depende da stack que o grupo escolher.
-
-## 10. Diagramas relacionados
-
-- [Modelo de classes](diagramas/classes.puml)
-- [Sequência de abertura](diagramas/sequencia.puml)
-- [Comunicação da abertura](diagramas/comunicacao.puml)
-- [Componentes](diagramas/componentes.puml)
-
-## 11. Decisões pendentes
-
-- [ ] Escolher linguagem e framework.
-- [ ] Escolher banco de dados e estratégia de migração.
-- [ ] Definir se a autenticação local será feita pela própria aplicação ou por biblioteca/serviço externo.
-- [ ] Confirmar limites dos módulos após revisar os diagramas.
-- [ ] Definir como feriados serão cadastrados no calendário comercial do MVP.
-
-Não escolher tecnologia antes de verificar os requisitos do curso, o conhecimento disponível no grupo e o tempo de entrega.
+| ASR-01 - consistência | Banco compartilhado e transação local para chamado e histórico. |
+| ASR-02 - notificação substituível | Interface Notificador e implementação composta na inicialização. |
+| ASR-03 - prioridade modificável | Matriz isolada no domínio e coberta por nove testes. |

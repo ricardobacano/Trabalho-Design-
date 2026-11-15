@@ -1,40 +1,62 @@
 @startuml
-title Abertura e encaminhamento de chamado
+title Diagrama de Sequência - abrir chamado
+autonumber
 
 actor Solicitante
-boundary "Interface web" as UI
-control "AbrirChamado" as UC
-control "CatalogoEquipes" as Catalogo
-control "PoliticaPrioridade" as Prioridade
-control "PoliticaSLA" as SLA
-database "Repositórios" as Repo
-control "NotificacaoInterna" as Notif
+boundary "Rota /chamados/novo" as Rota
+control AbrirChamadoService as Service
+database UsuarioRepositorySQLAlchemy as UserRepo
+database CategoriaRepositorySQLAlchemy as CatRepo
+entity Chamado
+participant MatrizPrioridade as Matriz
+participant PoliticaPrazo as Prazo
+entity EventoHistorico
+database ChamadoRepositorySQLAlchemy as ChamadoRepo
+participant Notificador as Notificador
 
-note over Solicitante,UI
-  Pré-condição: solicitante autenticado.
-end note
+Solicitante -> Rota: POST dados do chamado
+Rota -> Service: executar(comando)
+Service -> UserRepo: buscar_por_id(solicitante_id)
+UserRepo --> Service: solicitante
+Service -> CatRepo: buscar_por_id(categoria_id)
+CatRepo --> Service: categoria
 
-Solicitante -> UI: preencher e enviar chamado
-UI -> UC: abrir(dados, usuarioAutenticado)
-UC -> UC: validar campos e permissão
-UC -> Catalogo: obterEquipePadrao(categoria)
-Catalogo --> UC: equipe ou sem correspondência
-UC -> Prioridade: calcular(impacto, urgencia)
-Prioridade --> UC: prioridade
-UC -> SLA: criarAcompanhamento(prioridade, calendario)
-SLA --> UC: prazos e relógios
-UC -> Repo: salvar(chamado, evento de criação)
+alt categoria inexistente
+  Service --> Rota: RegraNegocioError
+  Rota --> Solicitante: HTTP 400 com mensagem
+else categoria válida
+  Service -> Chamado: abrir(dados, equipe_id)
+  activate Chamado
+  Chamado -> Chamado: validar campos
+  Chamado -> Matriz: calcular(impacto, urgencia)
+  Matriz --> Chamado: prioridade
+  Chamado -> Prazo: calcular_prazo(prioridade, criado_em)
+  Prazo --> Chamado: prazo_atendimento
+  alt categoria possui equipe
+    Chamado -> Chamado: estado = EM_FILA
+  else categoria sem equipe
+    Chamado -> Chamado: estado = EM_TRIAGEM
+  end
+  Chamado --> Service: chamado válido
+  deactivate Chamado
 
-alt categoria possui equipe padrão
-  Repo --> UC: chamado salvo na fila da equipe
-  UC -> Notif: notificarEquipe(chamado)
-else categoria sem equipe válida
-  Repo --> UC: chamado salvo na fila de triagem
-  UC -> Notif: notificarCoordenador(chamado)
+  Service -> EventoHistorico: abertura(chamado, categoria, equipe)
+  EventoHistorico --> Service: evento inicial
+  Service -> ChamadoRepo: salvar_novo(chamado, evento)
+  activate ChamadoRepo
+  ChamadoRepo -> ChamadoRepo: INSERT chamado e histórico
+  ChamadoRepo -> ChamadoRepo: COMMIT único
+  ChamadoRepo --> Service: chamado_id
+  deactivate ChamadoRepo
+
+  Service -> Notificador: confirmar_abertura(...)
+  alt confirmação enviada
+    Notificador --> Service: sucesso
+  else falha da notificação
+    Notificador --> Service: exceção
+    Service -> Service: manter chamado e registrar aviso
+  end
+  Service --> Rota: ResultadoAbertura
+  Rota --> Solicitante: redirecionar para detalhe
 end
-
-UC -> Notif: confirmarAbertura(solicitante, chamado)
-UC --> UI: protocolo, prioridade e estado
-UI --> Solicitante: exibir confirmação
 @enduml
-

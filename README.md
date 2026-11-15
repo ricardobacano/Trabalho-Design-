@@ -1,72 +1,102 @@
-# Sistema de Gerenciamento de Chamados de Suporte Técnico
+# Plataforma de Atendimento Técnico de TI
 
-Projeto final da disciplina **Design de Software 
+Trabalho final da disciplina **Design e Arquitetura de Software (2026-2)**, Tema 16.
 
-## Visão geral
+O repositório contém a documentação arquitetural e um protótipo executável de uma
+plataforma de chamados. A fatia vertical implementada permite que um solicitante de
+demonstração abra um chamado, receba prioridade e prazo iniciais, seja encaminhado
+para uma equipe ou para triagem e consulte seus próprios chamados.
 
-O grupo está projetando um sistema de suporte técnico inspirado no fluxo de chamados do GLPI e em práticas de gestão de serviços associadas ao ITIL.
+## O que está implementado
 
-O sistema permitirá que solicitantes autenticados abram chamados ou que um técnico os registre em nome de alguém. O chamado é encaminhado para uma equipe; um técnico da equipe pode assumi-lo. Prioridade, SLA, interações e mudanças ficam registrados até o encerramento.
+- abertura de chamado com resumo, descrição, categoria, impacto e urgência;
+- cálculo da prioridade pela matriz impacto x urgência;
+- cálculo de prazo inicial em horas corridas;
+- encaminhamento para a equipe da categoria;
+- fluxo alternativo para categoria sem equipe: fila de triagem;
+- persistência transacional do chamado e do evento inicial de histórico;
+- consulta de lista e detalhe dos chamados do usuário de demonstração;
+- confirmação por um **NotificadorFake** substituível;
+- tolerância à falha da notificação após a persistência;
+- testes automatizados da regra e da fatia vertical.
 
-A arquitetura em avaliação é um **monólito modular organizado em camadas**. A linguagem, o framework e o banco de dados ainda serão escolhidos pelo grupo e alinhados com a professora.
+O protótipo não implementa login completo. O usuário de demonstração é carregado
+automaticamente, conforme permitido pelo enunciado.
 
-## Escopo atual do MVP
+## Executar
 
-- Login obrigatório para solicitantes e equipe de suporte.
-- Abertura de chamado por solicitante ou por técnico em nome do solicitante.
-- Encaminhamento por categoria para uma equipe padrão; casos sem correspondência vão para triagem do coordenador.
-- Cálculo de prioridade com base em impacto e urgência.
-- Fila da equipe e assunção por técnico.
-- Comentários públicos e anotações internas.
-- Histórico de alterações e acompanhamento do SLA.
-- Notificações internas simuladas.
-- Resolução e fechamento pelo solicitante; reabertura permitida somente enquanto o chamado estiver Resolvido.
+Requisitos: Python 3.11 ou superior.
 
-O escopo e os tempos de SLA ainda devem ser validados com a professora.
+~~~bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python run.py
+~~~
+
+Acesse: <http://127.0.0.1:5000>
+
+Na primeira execução, o SQLite é criado em **instance/chamados.db** e recebe
+usuários, equipes e categorias de demonstração.
+
+## Testar
+
+~~~bash
+source .venv/bin/activate
+pytest
+~~~
+
+Os testes cobrem as nove combinações da matriz de prioridade, os quatro prazos,
+abertura normal, triagem, validação, rollback transacional, histórico, isolamento
+da consulta e falha do notificador.
+
+## Arquitetura
+
+A solução usa **cliente-servidor**, **monólito modular**, **organização em camadas**
+e **MVC na apresentação**. Os módulos executam no mesmo processo e compartilham um
+banco relacional, mas mantêm responsabilidades explícitas:
+
+- **app/chamados**: domínio, aplicação, apresentação e persistência de chamados;
+- **app/catalogo**: usuários, categorias e equipes;
+- **app/notificacoes**: contrato e implementação simulada de confirmação.
+
+Não existe uma camada arquitetural chamada “Portas”. A interface **Notificador**
+existe porque a dependência externa deve ser substituível.
 
 ## Documentação
 
 | Documento | Conteúdo |
 |---|---|
-| [Requisitos](docs/requisitos.md) | Objetivo, escopo, atores, requisitos e regras de negócio. |
-| [Prioridade e ciclo de vida](docs/prioridade-e-ciclo-de-vida.md) | Matriz de impacto × urgência, SLA, calendário e estados do chamado. |
-| [Modelo de domínio](docs/modelo-dominio.md) | Conceitos, relações e responsabilidades do domínio. |
-| [Arquitetura](docs/arquitetura.md) | Proposta de monólito modular em camadas e limites dos módulos. |
-| [Trade-offs](docs/tradeoffs.md) | Benefícios, custos e alternativas consideradas. |
-| [Plano de implementação e testes](docs/plano-implementacao-e-testes.md) | Marcos do MVP, critérios de aceite e casos de teste. |
-| [ADR-001 — Arquitetura](docs/adr/ADR-001-arquitetura.md) | Registro da decisão arquitetural, ainda sujeito à revisão do grupo/professora. |
+| [Requisitos](docs/requisitos.md) | Contexto, atores, 8 RFs, restrições e 3 ASRs. |
+| [Modelo de domínio](docs/modelo-dominio.md) | Responsabilidades, relações, GRASP, coesão, acoplamento e SOLID. |
+| [Prioridade e prazo](docs/prioridade-e-ciclo-de-vida.md) | Matriz, prazo inicial e estados considerados. |
+| [Arquitetura](docs/arquitetura.md) | Componentes, dependências, comunicação, persistência e implantação. |
+| [Trade-offs](docs/tradeoffs.md) | Comparação com monólito simples e microsserviços. |
+| [Evolução](docs/evolucao.md) | Troca de banco e de mecanismo de notificação. |
+| [Plano e testes](docs/plano-implementacao-e-testes.md) | Escopo implementado e rastreabilidade dos testes. |
+| [Roteiro de defesa](docs/roteiro-defesa.md) | Sequência de apresentação e respostas concretas a perguntas prováveis. |
 
-## Diagramas
+### ADRs
 
-- [Classes](docs/diagramas/classes.puml)
-- [Sequência de abertura](docs/diagramas/sequencia.puml)
-- [Comunicação da abertura](docs/diagramas/comunicacao.puml)
-- [Componentes](docs/diagramas/componentes.puml)
+- [ADR-001 - Monólito modular em camadas](docs/adr/ADR-001.md)
+- [ADR-002 - Persistência relacional transacional](docs/adr/ADR-002.md)
+- [ADR-003 - Notificação síncrona substituível](docs/adr/ADR-003.md)
 
-## Estrutura prevista
+### UML
 
-```text
-.
-├── README.md
-├── docs/
-│   ├── requisitos.md
-│   ├── prioridade-e-ciclo-de-vida.md
-│   ├── modelo-dominio.md
-│   ├── arquitetura.md
-│   ├── tradeoffs.md
-│   ├── plano-implementacao-e-testes.md
-│   ├── adr/
-│   │   └── ADR-001-arquitetura.md
-│   └── diagramas/
-│       ├── classes.puml
-│       ├── sequencia.puml
-│       ├── comunicacao.puml
-│       └── componentes.puml
-├── src/       # a definir após a escolha da stack
-└── tests/     # a definir após a escolha da stack
-```
+| Diagrama | Fonte PlantUML | Imagem renderizada |
+|---|---|---|
+| Classes | [classes.puml](docs/diagramas/classes.puml) | [classes.png](docs/diagramas/classes.png) |
+| Sequência | [sequencia.puml](docs/diagramas/sequencia.puml) | [sequencia.png](docs/diagramas/sequencia.png) |
+| Comunicação | [comunicacao.puml](docs/diagramas/comunicacao.puml) | [comunicacao.png](docs/diagramas/comunicacao.png) |
+| Componentes | [componentes.puml](docs/diagramas/componentes.puml) | [componentes.png](docs/diagramas/componentes.png) |
 
-Os ADRs sobre autenticação e persistência serão criados quando as decisões correspondentes forem confirmadas.
+## Limites conscientes do protótipo
 
-A stack e as instruções para executar a aplicação serão adicionadas ao README assim que forem definidas e o esqueleto do projeto estiver disponível.
-
+- somente o solicitante abre o próprio chamado;
+- autenticação real, assunção por técnico, interações e mudanças posteriores de
+  estado estão modeladas como evolução, não implementadas;
+- o prazo inicial usa horas corridas; calendário comercial, pausas e feriados são
+  evolução;
+- a notificação é simulada e mantida em memória;
+- SQLite é adequado à demonstração local, não à implantação institucional.

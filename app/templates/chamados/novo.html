@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Abrir chamado{% endblock %}
+{% block conteudo %}
+  <h1>Abrir chamado</h1>
+  <p>Os campos abaixo determinam o encaminhamento, a prioridade e o prazo inicial.</p>
+  <form method="post" class="cartao formulario">
+    <label>Resumo
+      <input name="resumo" maxlength="160" required value="{{ dados.get('resumo', '') }}">
+    </label>
+    <label>Descrição
+      <textarea name="descricao" rows="6" required>{{ dados.get('descricao', '') }}</textarea>
+    </label>
+    <div class="grade">
+      <label>Categoria
+        <select name="categoria_id" required>
+          <option value="">Selecione</option>
+          {% for categoria in categorias %}
+            <option value="{{ categoria.id }}" {% if dados.get('categoria_id') == categoria.id|string %}selected{% endif %}>
+              {{ categoria.nome }}{% if categoria.equipe_nome %} - {{ categoria.equipe_nome }}{% else %} - triagem{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Impacto
+        <select name="impacto" required>
+          <option value="">Selecione</option>
+          {% for impacto in impactos %}<option value="{{ impacto.value }}" {% if dados.get('impacto') == impacto.value %}selected{% endif %}>{{ impacto.value }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Urgência
+        <select name="urgencia" required>
+          <option value="">Selecione</option>
+          {% for urgencia in urgencias %}<option value="{{ urgencia.value }}" {% if dados.get('urgencia') == urgencia.value %}selected{% endif %}>{{ urgencia.value }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <button type="submit">Registrar chamado</button>
+  </form>
+{% endblock %}
+

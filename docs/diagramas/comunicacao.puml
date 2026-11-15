@@ -1,45 +1,33 @@
 @startuml
-title Diagrama de comunicação — abertura de chamado
-left to right direction
-
+title Diagrama de Comunicação - abrir chamado
+top to bottom direction
 skinparam linetype polyline
-skinparam nodesep 60
-skinparam ranksep 70
+skinparam nodesep 70
+skinparam ranksep 65
 
-object "solicitante: Usuario" as Solicitante
-object "interface: TelaChamado" as Tela
-object "casoDeUso: AbrirChamado" as Caso
+actor Solicitante as s
+rectangle "apresentação\nRota novo" as r
+rectangle "aplicação\nAbrirChamadoService" as a
+rectangle "catálogo\nRepositórios de usuário e categoria" as c
+rectangle "domínio\nChamado / EventoHistorico" as d
+rectangle "persistência\nChamadoRepository" as p
+rectangle "integração\nNotificador" as n
 
-object "catalogo: CatalogoEquipes" as Catalogo
-object "prioridade: MatrizPrioridade" as Matriz
-object "sla: PoliticaSLA" as SLA
-object "repositorio: ChamadoRepository" as Repo
-object "notificacao: NotificacaoInterna" as Notif
+s -right- r : 1 → enviar formulário\n3 ← exibir protocolo ou erro
+r -right- a : 2 → executar(comando)\n2.8 ← retornar resultado
+c -down- a : 2.1 ← buscar usuário e categoria\n2.2 → retornar dados do catálogo
+a -down- d : 2.3 → abrir e criar evento\n2.4 ← retornar objetos válidos
+a -right- p : 2.5 → salvar chamado + histórico\n2.6 ← retornar id após commit
+p -down[hidden]- n
+a -right- n : 2.7 → confirmar abertura
 
-' Orienta o posicionamento dos objetos
-Solicitante -[hidden]right-> Tela
-Tela -[hidden]right-> Caso
-Caso -[hidden]right-> Catalogo
-Catalogo -[hidden]down-> Matriz
-Matriz -[hidden]down-> SLA
-SLA -[hidden]down-> Repo
-Repo -[hidden]down-> Notif
+note bottom of p
+  Um único commit grava
+  chamado e histórico.
+end note
 
-' Mensagens do fluxo
-Solicitante --> Tela : 1. enviar(dados)
-Tela --> Caso : 2. abrir(dados, usuario)
-
-Caso --> Catalogo : 3. buscarEquipe(categoria)
-Caso --> Matriz : 4. calcular(impacto, urgencia)
-Caso --> SLA : 5. iniciar(prioridade, calendario)
-Caso --> Repo : 6. salvar(chamado, historico)
-Caso --> Notif : 7. notificar(equipe ou coordenador)
-
-Caso --> Tela : 8. retornar(protocolo, prioridade, estado)
-Tela --> Solicitante : 9. mostrarConfirmacao()
-
-note bottom of Caso
-  O solicitante já está autenticado.
-  Sem equipe mapeada, o chamado segue para triagem.
+note bottom of n
+  Falha após o commit gera
+  aviso, sem apagar o chamado.
 end note
 @enduml

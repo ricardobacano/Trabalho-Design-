@@ -1,37 +1,47 @@
-# Trade-offs da arquitetura
+# Alternativas e trade-offs
 
-**Projeto:** Sistema de Gerenciamento de Chamados de Suporte Técnico
-**Arquitetura em avaliação:** monólito modular organizado em camadas
+## 1. Alternativas
 
-## 1. Resumo da escolha
+Foram comparadas três formas de organizar a solução:
 
-A proposta mantém o sistema em uma única aplicação implantável e separa o código em módulos de domínio e camadas. Os casos de uso dependem de contratos para persistência e notificações; as regras centrais ficam separadas de interface e infraestrutura.
+1. monólito simples sem módulos explícitos;
+2. monólito modular em camadas, escolhido;
+3. microsserviços.
 
-## 2. Benefícios esperados
+## 2. Comparação
 
-- **Menor esforço de operação:** um artefato principal para executar e demonstrar.
-- **Fluxo fácil de acompanhar:** abrir, encaminhar, assumir e resolver chamado ocorre dentro de uma aplicação.
-- **Consistência simplificada:** mudanças do chamado e do histórico podem participar da mesma transação de banco.
-- **Testes acessíveis:** prioridade e ciclo de vida podem ser testados sem infraestrutura distribuída.
-- **Liberdade de evolução:** interfaces para banco e notificações reduzem dependência de uma implementação específica.
-- **Adequação ao grupo:** permite divisão em módulos sem exigir que integrantes integrem serviços independentes desde o início.
+| Critério | Monólito simples | Monólito modular em camadas | Microsserviços |
+|---|---|---|---|
+| Modificabilidade | Baixa se regras, SQL e HTTP forem misturados. | Mudanças ficam concentradas nos módulos e camadas. | Alta independência quando fronteiras estão maduras. |
+| Consistência | Transações locais simples. | Transações locais simples e fronteiras explícitas. | Exige consistência distribuída entre serviços. |
+| Testabilidade | Pode exigir interface e banco se regras não forem isoladas. | Regras podem ser testadas sem HTTP. | Exige testes de contrato e de comunicação. |
+| Implantação | Um artefato simples. | Um artefato simples. | Várias implantações e configuração de rede. |
+| Escalabilidade | Escala a aplicação inteira. | Escala a aplicação inteira. | Permite escala independente. |
+| Complexidade inicial | Menor. | Moderada e compatível com o trabalho. | Alta e sem requisito que a justifique. |
+| Custo operacional | Baixo. | Baixo. | Alto. |
 
-## 3. Custos e limitações
+## 3. Decisão
 
-- **Disciplina de módulos:** sem regras de dependência, um monólito pode virar código muito acoplado.
-- **Implantação conjunta:** qualquer alteração do sistema pode exigir publicar a aplicação completa.
-- **Escala conjunta:** módulos não podem ser escalados de forma independente.
-- **Limites ainda sujeitos a mudança:** se as fronteiras do domínio forem mal definidas, módulos podem precisar ser reorganizados.
-- **Separação em camadas exige cuidado:** abstrações excessivas podem atrasar um MVP pequeno.
+O **monólito modular em camadas** foi escolhido porque preserva a transação local do
+ASR-01 e permite isolar a prioridade e a notificação dos ASRs 02 e 03 sem introduzir
+rede, mensageria ou múltiplos bancos.
 
-## 4. Alternativas consideradas
+O monólito simples teria menos arquivos, mas aumentaria o risco de concentrar
+validação, prioridade e SQL nas rotas. Microsserviços permitiriam implantação
+independente, porém o protótipo possui uma equipe pequena, uma única implantação e
+nenhum requisito de escala independente.
 
-| Alternativa | Motivo para não ser a escolha inicial |
-|---|---|
-| **Monólito sem módulos/camadas explícitos** | Começa simples, mas pode concentrar regras na interface e dificultar revisão e testes. |
-| **Microsserviços** | Exigem implantação, comunicação, observabilidade e tratamento de falhas distribuídas sem necessidade demonstrada no escopo atual. |
-| **Microkernel** | O requisito não prevê extensões instaláveis por plugins; não há um núcleo de produto que precise carregar funcionalidades independentes. |
+## 4. Custos aceitos
+
+- os módulos são implantados e escalados juntos;
+- o banco é compartilhado;
+- as fronteiras dependem de disciplina de código;
+- a separação em camadas cria mais elementos que um script Flask único;
+- a interface de notificação adiciona uma abstração, justificada pelo enunciado e
+  pela necessidade de substituição.
 
 ## 5. Quando reavaliar
 
-Reavaliar a decisão caso surjam necessidades concretas de escalar módulos isoladamente, implantar equipes independentes, integrar sistemas externos com disponibilidade própria ou separar domínios com regras e ciclos de mudança distintos. A reavaliação deve vir acompanhada de evidências e de um novo ADR.
+A decisão deve ser revista se surgirem equipes autônomas, implantação independente,
+escalas muito diferentes entre módulos ou integrações que não possam compartilhar a
+disponibilidade do monólito.

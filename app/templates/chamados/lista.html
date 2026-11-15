@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Meus chamados{% endblock %}
+{% block conteudo %}
+  <section class="cabecalho-pagina">
+    <div>
+      <h1>Meus chamados</h1>
+      <p>Consulte o protocolo, a prioridade, o destino e o prazo inicial.</p>
+    </div>
+    <a class="botao" href="{{ url_for('chamados.novo') }}">Novo chamado</a>
+  </section>
+
+  {% if chamados %}
+    <div class="tabela-responsiva">
+      <table>
+        <thead><tr><th>Protocolo</th><th>Resumo</th><th>Prioridade</th><th>Destino</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          {% for chamado in chamados %}
+            <tr>
+              <td>#{{ chamado.id }}</td>
+              <td>{{ chamado.resumo }}</td>
+              <td><span class="etiqueta">{{ chamado.prioridade }}</span></td>
+              <td>{{ chamado.equipe }}</td>
+              <td>{{ chamado.estado }}</td>
+              <td><a href="{{ url_for('chamados.detalhar', chamado_id=chamado.id) }}">Detalhes</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="vazio">Nenhum chamado foi aberto por este usuário.</div>
+  {% endif %}
+{% endblock %}
+

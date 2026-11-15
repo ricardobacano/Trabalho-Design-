@@ -1,0 +1,10 @@
+[project]
+name = "plataforma-atendimento-ti"
+version = "1.0.0"
+description = "Protótipo acadêmico para abertura e consulta de chamados de suporte"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
