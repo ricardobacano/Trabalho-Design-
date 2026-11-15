@@ -1,95 +1,90 @@
-# Modelo de domínio — Sistema de Chamados
+# Modelo de domínio e responsabilidades
 
-**Tema:** 16
-**Status:** primeira versão para revisão do grupo
-**Referências:** `requisitos.md` e `prioridade-e-ciclo-de-vida.md`
+## 1. Conceitos principais
 
-## 1. Objetivo do modelo
+| Conceito | Responsabilidade |
+|---|---|
+| **Usuario** | Representar o solicitante identificado no contexto da demonstração. |
+| **Categoria** | Classificar o chamado e informar a equipe padrão, quando configurada. |
+| **Equipe** | Representar o grupo responsável pela fila de atendimento. |
+| **Chamado** | Manter dados da solicitação e proteger as regras de sua criação. |
+| **EventoHistorico** | Registrar um fato auditável ocorrido com o chamado. |
+| **MatrizPrioridade** | Calcular a prioridade a partir de impacto e urgência. |
+| **PoliticaPrazo** | Calcular o prazo inicial conforme a prioridade. |
+| **AbrirChamadoService** | Coordenar o caso de uso sem executar regras internas das entidades. |
+| **ConsultarChamadosService** | Coordenar lista e detalhe sempre limitados ao solicitante informado. |
+| **UsuarioRepositorySQLAlchemy** | Recuperar os dados do solicitante usados pela aplicação e pela apresentação. |
+| **ChamadoRepositorySQLAlchemy** | Persistir chamado e histórico na mesma transação e realizar consultas. |
+| **Notificador** | Definir o contrato mínimo para confirmação da abertura. |
+| **NotificadorFake** | Simular a dependência externa durante demonstração e testes. |
 
-Este modelo descreve os principais conceitos do sistema e as relações entre eles. Ele deve orientar os diagramas UML e a implementação, sem decidir detalhes de framework, banco de dados ou interface.
+## 2. Relações
 
-O cenário central é: uma pessoa autenticada abre um chamado ou um técnico o registra em nome dela; o chamado é encaminhado a uma equipe; um técnico da equipe assume o atendimento; interações, mudanças e prazos ficam registrados até o fechamento.
+- Um usuário pode abrir vários chamados; cada chamado possui um solicitante.
+- Uma categoria pode possuir zero ou uma equipe padrão.
+- Cada chamado possui exatamente uma categoria.
+- Um chamado pode possuir uma equipe; quando não possui, fica na triagem.
+- Um chamado possui um ou mais eventos de histórico ao longo de sua vida.
+- A matriz calcula uma prioridade para cada combinação válida de impacto e urgência.
 
-## 2. Conceitos do domínio
+## 3. Distribuição de responsabilidades
 
-| Conceito | Responsabilidade | Dados principais |
-|---|---|---|
-| **Usuário** | Representa uma pessoa autenticada que pode ser solicitante, técnico ou coordenador conforme seus papéis. | identificador, nome, e-mail, situação, papéis |
-| **Equipe** | Agrupa técnicos e recebe chamados para atendimento. | identificador, nome, situação |
-| **Membro de equipe** | Registra a participação de um usuário técnico em uma equipe. | equipe, usuário, situação |
-| **Categoria** | Classifica a solicitação e define a equipe padrão no MVP. | identificador, nome, descrição, equipe padrão opcional |
-| **Chamado** | Mantém solicitação, prioridade, estado, solicitante, autor do registro e responsáveis. | identificador, resumo, descrição, categoria, impacto, urgência, prioridade, estado, datas |
-| **Interação** | Registra comentário público ou anotação interna. | conteúdo, visibilidade, autor, data/hora |
-| **Evento de histórico** | Registra uma mudança relevante de forma auditável. | tipo, ator, data/hora, valores anteriores e novos |
-| **Política de SLA** | Define metas de primeira resposta e resolução por prioridade, conforme o calendário comercial. | prioridade, metas, calendário |
-| **Acompanhamento de SLA** | Controla prazos, pausas e resultado dos relógios de um chamado. | prazo inicial, prazo de resolução, tempo consumido, situação |
-| **Matriz de prioridade** | Calcula a prioridade a partir de impacto e urgência. | regra de combinação |
+### Abertura
 
-## 3. Relações e cardinalidades
+O **AbrirChamadoService** recebe o evento do sistema, consulta o solicitante e a
+categoria pelos repositórios, pede que **Chamado** seja criado, solicita a
+persistência e aciona o notificador. Ele não consulta campos internos do chamado
+para decidir suas regras.
 
-- Um usuário pode solicitar vários chamados; cada chamado possui um solicitante.
-- Um usuário pode registrar vários chamados; cada chamado possui um autor do registro. O autor pode ser o próprio solicitante ou um técnico.
-- Um chamado pode estar encaminhado para uma equipe; antes da triagem, essa equipe pode estar indefinida e o chamado fica na fila do coordenador.
-- Uma categoria tem, no MVP, zero ou uma equipe padrão. Uma equipe pode atender várias categorias.
-- Uma equipe possui vários membros; um técnico pode participar de mais de uma equipe.
-- Um chamado pode ter zero ou um técnico responsável individual. O técnico deve pertencer à equipe responsável, exceto quando o coordenador fizer uma reatribuição.
-- Um chamado contém zero ou mais interações e eventos de histórico.
-- Cada interação e cada evento de histórico têm um autor/ator.
-- Cada chamado possui um acompanhamento de SLA e uma prioridade resultante da matriz.
+**Chamado.abrir** valida resumo e descrição, solicita o cálculo da prioridade e
+define o estado inicial:
 
-## 4. Regras que o modelo precisa preservar
+- **EM_FILA**, quando existe equipe;
+- **EM_TRIAGEM**, quando a categoria não possui equipe.
 
-1. Solicitante, autor do registro e técnico responsável são papéis diferentes no chamado, mesmo quando duas dessas funções pertencem à mesma pessoa.
-2. A categoria direciona o chamado à equipe padrão. Sem categoria ou equipe configurada, o chamado fica na fila de triagem do coordenador.
-3. O chamado pode estar atribuído a uma equipe antes de ser assumido por um técnico.
-4. Comentários públicos são visíveis ao solicitante e à equipe; anotações internas são visíveis apenas à equipe e aos coordenadores.
-5. Interações e eventos de histórico são registros distintos: comentário descreve comunicação; evento registra mudança de estado, prioridade, equipe ou responsável.
-6. A prioridade inicial é calculada por impacto e urgência; ajustes autorizados exigem justificativa e histórico.
-7. O relógio de resolução do SLA pausa em Aguardando solicitante e Aguardando terceiro, seguindo o calendário comercial acordado.
-8. O chamado Resolvido pode ser fechado pelo solicitante; chamados Fechados não são reabertos no MVP.
+O repositório grava o chamado e o evento inicial na mesma transação.
 
-## 5. Estados representados
+### Consulta
 
-O atributo `estado` do chamado usa os valores definidos em `prioridade-e-ciclo-de-vida.md`:
+O **ConsultarChamadosService** recebe o identificador do solicitante e pede ao
+repositório a lista ou o detalhe aplicando esse filtro. A apresentação recebe
+somente o resultado permitido para aquele usuário.
 
-- Em fila
-- Em atendimento
-- Aguardando solicitante
-- Aguardando terceiro
-- Resolvido
-- Fechado
-- Cancelado
+## 4. GRASP
 
-As transições permitidas ficam no diagrama de estados do chamado, que será produzido na próxima etapa. O diagrama de classes não substitui essa especificação.
+| Princípio | Aplicação |
+|---|---|
+| Controller | **AbrirChamadoService** coordena o caso de uso de abertura. |
+| Information Expert | **Chamado** conhece os dados necessários para validar sua criação e definir seu estado inicial. |
+| Creator | **Chamado.abrir** cria uma instância válida; **EventoHistorico.abertura** cria o evento correspondente. |
+| High Cohesion | Prioridade, prazo, persistência e notificação possuem elementos separados. |
+| Low Coupling | O caso de uso depende do contrato **Notificador**, não de e-mail ou WhatsApp. |
+| Polymorphism | **NotificadorFake** pode ser substituído por outra implementação de **Notificador**. |
+| Protected Variations | A interface **Notificador** protege o fluxo contra mudanças no mecanismo externo. |
+| Pure Fabrication | O repositório concentra persistência sem atribuí-la à entidade de domínio. |
 
-## 6. Responsabilidades e limites
+## 5. Coesão e acoplamento
 
-### Chamado
+- A matriz contém somente regras de prioridade.
+- O chamado contém regras relacionadas à própria criação e estado.
+- O serviço de aplicação apenas coordena colaboradores.
+- A apresentação conhece formulários e HTTP, mas não contém a matriz.
+- SQLAlchemy permanece nos elementos de persistência.
+- A notificação conhece somente os dados mínimos da confirmação.
 
-Mantém os dados e o estado atual da solicitação. Deve proteger invariantes, como exigir descrição da solução para resolver e impedir transições inválidas. Não deve enviar e-mail nem conhecer detalhes do banco.
+O principal acoplamento deliberado é o uso de SQLAlchemy nos repositórios concretos.
+Esse custo foi aceito para um protótipo pequeno e está documentado na ADR-002.
 
-### Matriz de prioridade
+## 6. SOLID pertinente
 
-Recebe impacto e urgência e retorna a prioridade. A regra deve ser isolada para ser testada sem interface ou banco.
+- **SRP:** abertura, prioridade, persistência e notificação têm razões diferentes
+  para mudar.
+- **OCP:** um novo notificador pode ser adicionado sem modificar o caso de uso.
+- **LSP:** toda implementação de **Notificador** deve aceitar a mesma confirmação e
+  não alterar o significado do contrato.
+- **ISP:** **Notificador** possui apenas a operação utilizada pela abertura.
+- **DIP:** o serviço recebe a abstração **Notificador**; a implementação fake é
+  escolhida na criação da aplicação.
 
-### Acompanhamento de SLA
-
-Controla primeira resposta, prazo de resolução e pausas. O cálculo considera o calendário comercial: segunda a sexta, 08:00–18:00, fuso `America/Sao_Paulo`, com feriados configurados.
-
-### Equipe e categoria
-
-A categoria aponta para uma equipe padrão no MVP. Coordenador trata casos sem encaminhamento válido.
-
-### Interação e evento de histórico
-
-A interação registra conteúdo e visibilidade. Evento de histórico registra alteração do sistema e não deve ser apagado para ocultar uma ação anterior.
-
-## 7. Conceitos deliberadamente fora do modelo inicial
-
-Para manter o MVP controlado, este modelo não inclui ativos de TI, contratos, base de conhecimento, catálogo de serviços, fornecedores integrados, automação de regras ou múltiplas organizações. Se algum deles virar requisito, deve ser incluído por uma mudança explícita no escopo.
-
-## 8. Arquivo UML associado
-
-O diagrama inicial está em [`classes.puml`](diagramas/classes.puml). Ele mostra entidades, enumerações, dependências e cardinalidades principais.
-
-Antes de implementar, o grupo deve revisar se as relações refletem os requisitos e se a professora espera outro nível de detalhe no diagrama.
+Não foram criadas interfaces para todos os repositórios. Essa abstração não era
+necessária para cumprir a fatia e aumentaria o código sem uma variação concreta.
