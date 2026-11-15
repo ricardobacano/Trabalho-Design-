@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Chamado #{{ chamado.id }}{% endblock %}
+{% block conteudo %}
+  <section class="cabecalho-pagina">
+    <div><h1>Chamado #{{ chamado.id }}</h1><p>{{ chamado.resumo }}</p></div>
+    <a href="{{ url_for('chamados.listar') }}">Voltar</a>
+  </section>
+  <div class="cartao">
+    <dl class="detalhes">
+      <div><dt>Estado</dt><dd>{{ chamado.estado }}</dd></div>
+      <div><dt>Prioridade</dt><dd>{{ chamado.prioridade }}</dd></div>
+      <div><dt>Categoria</dt><dd>{{ chamado.categoria }}</dd></div>
+      <div><dt>Destino</dt><dd>{{ chamado.equipe }}</dd></div>
+      <div><dt>Impacto</dt><dd>{{ chamado.impacto }}</dd></div>
+      <div><dt>Urgência</dt><dd>{{ chamado.urgencia }}</dd></div>
+      <div><dt>Prazo inicial</dt><dd>{{ chamado.prazo_atendimento.strftime('%d/%m/%Y %H:%M') }}</dd></div>
+    </dl>
+    <h2>Descrição</h2>
+    <p class="texto-longo">{{ chamado.descricao }}</p>
+  </div>
+  <h2>Histórico</h2>
+  {% for evento in chamado.historico %}
+    <article class="evento">
+      <strong>{{ evento.tipo }}</strong>
+      <span>{{ evento.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+      <p>{{ evento.descricao }}</p>
+    </article>
+  {% endfor %}
+{% endblock %}
+

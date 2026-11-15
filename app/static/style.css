@@ -1,0 +1,35 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #172033; background: #f4f6f9; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { background: #182844; color: white; padding: 1rem max(1.25rem, calc((100% - 1050px) / 2)); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+header div, nav { display: flex; align-items: center; gap: 1rem; }
+header span { color: #bdc8db; font-size: .9rem; }
+a { color: #205bb5; text-decoration: none; }
+header a { color: white; }
+main { max-width: 1050px; margin: 2rem auto; padding: 0 1.25rem 3rem; }
+h1 { margin-bottom: .35rem; }
+.usuario-demo { background: #e8eef8; padding: .65rem .8rem; border-radius: .4rem; }
+.cabecalho-pagina { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.botao, button { display: inline-block; border: 0; border-radius: .4rem; padding: .7rem 1rem; background: #2463c5; color: white; cursor: pointer; font-weight: 600; }
+.cartao, .evento, .vazio { background: white; border: 1px solid #dce2eb; border-radius: .55rem; padding: 1.2rem; }
+.formulario { display: grid; gap: 1rem; }
+label { display: grid; gap: .4rem; font-weight: 600; }
+input, textarea, select { width: 100%; padding: .7rem; border: 1px solid #aeb8c8; border-radius: .35rem; font: inherit; background: white; }
+.grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.tabela-responsiva { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { text-align: left; padding: .85rem; border-bottom: 1px solid #e0e5ec; }
+th { background: #e9eef6; }
+.etiqueta { font-family: ui-monospace, monospace; font-size: .85rem; }
+.mensagem { padding: .8rem 1rem; border-radius: .4rem; margin: 1rem 0; }
+.sucesso { background: #dff3e4; color: #185d2a; }
+.aviso { background: #fff1c7; color: #6a4c00; }
+.erro { background: #f9dddd; color: #7f2020; }
+.detalhes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+dt { color: #5e6878; font-size: .85rem; }
+dd { margin: .2rem 0 0; font-weight: 600; }
+.evento { margin-bottom: .75rem; }
+.evento span { color: #687386; margin-left: .75rem; font-size: .9rem; }
+.texto-longo { white-space: pre-wrap; }
+@media (max-width: 700px) { header, header div, nav, .cabecalho-pagina { align-items: flex-start; flex-direction: column; } .grade, .detalhes { grid-template-columns: 1fr; } }
+
