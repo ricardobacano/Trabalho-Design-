@@ -1,55 +1,39 @@
 @startuml
-title Componentes — Monólito modular em camadas
+title Diagrama de Componentes - monólito modular
 skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+left to right direction
 
-package "Apresentação" {
-  component "Interface Web" as Web
-  component "Controladores" as Controllers
+actor Solicitante
+
+node "Processo Flask\n(monólito modular)" {
+  component "Apresentação Web\nrotas + Jinja2" as Web
+
+  package "Módulo Chamados" {
+    component "Aplicação\nAbrir e Consultar Chamados" as App
+    component "Domínio\nChamado, prioridade e prazo" as Domain
+    component "Persistência de chamados\nSQLAlchemy" as TicketPersistence
+  }
+
+  package "Módulo Catálogo" {
+    component "Persistência de catálogo\nusuários, categorias e equipes" as Catalog
+  }
+
+  package "Módulo Notificações" {
+    interface Notificador
+    component "NotificadorFake\n<<simulação externa>>" as Fake
+  }
 }
 
-package "Aplicação" {
-  component "Casos de uso\nAbrir / assumir / resolver" as UseCases
-  component "Autorização" as Authz
-}
+database "SQLite" as DB
 
-package "Domínio" {
-  component "Atendimento" as Atendimento
-  component "Matriz de Prioridade" as Priority
-  component "Política de SLA" as SLA
-  component "Catálogo e Equipes" as Catalog
-}
-
-package "Portas" {
-  interface "ChamadoRepository" as TicketPort
-  interface "CatalogoRepository" as CatalogPort
-  interface "NotificacaoPort" as NotificationPort
-}
-
-package "Infraestrutura" {
-  component "Repositórios concretos" as Repositories
-  database "Banco de dados" as DB
-  component "Notificações internas\n(simuladas)" as Notifications
-}
-
-Web --> Controllers
-Controllers --> UseCases
-UseCases --> Authz
-UseCases --> Atendimento
-UseCases --> Catalog
-UseCases --> Priority
-UseCases --> SLA
-UseCases --> TicketPort
-UseCases --> CatalogPort
-UseCases --> NotificationPort
-
-Repositories ..|> TicketPort
-Repositories ..|> CatalogPort
-Repositories --> DB
-Notifications ..|> NotificationPort
-
-note right of UseCases
-  Um único processo e implantação.
-  Módulos são separações de código,
-  não serviços independentes.
-end note
+Solicitante --> Web : HTTP
+Web --> App : chamada local
+App --> Domain : cria e aplica regras
+App --> Catalog : busca categoria e usuário
+App --> TicketPersistence : transação local
+App --> Notificador : confirmação
+Fake ..|> Notificador
+TicketPersistence --> DB : SQLAlchemy
+Catalog --> DB : SQLAlchemy
 @enduml
