@@ -32,6 +32,8 @@ facilita a transação, mas exige migração coordenada de todo o monólito.
 
 - nova classe que implemente **Notificador**;
 - configuração de credenciais e endpoint;
+- dados de contato e preferência de canal, caso a nova integração não utilize o
+  e-mail já disponível;
 - composição da implementação na inicialização;
 - testes de integração e tratamento de indisponibilidade.
 
@@ -41,12 +43,15 @@ facilita a transação, mas exige migração coordenada de todo o monólito.
 - regra de prioridade e prazo;
 - **Chamado** e **EventoHistorico**;
 - repositório e esquema do banco;
-- **AbrirChamadoService**, desde que o contrato seja preservado.
+- regras internas de **Chamado**, prioridade, prazo e persistência.
 
 ### Decisões que ajudam ou dificultam
 
-A interface pequena aplica Protected Variations, DIP e ISP. A comunicação síncrona
-é simples, mas um provedor lento aumenta o tempo de resposta. Como o chamado é
-confirmado antes da notificação, a indisponibilidade externa não desfaz o registro.
-Se a confiabilidade da entrega se tornar um ASR, será necessário avaliar fila e
-processamento assíncrono, aceitando consistência eventual e maior operação.
+A interface pequena aplica Protected Variations, DIP e ISP. Uma implementação que
+aceite o mesmo contrato pode ser trocada na composição. Se o canal exigir telefone
+ou preferência de contato, o catálogo e a montagem da confirmação também mudam;
+a interface não cria dados ausentes. A comunicação síncrona é simples, mas um
+provedor lento aumenta o tempo de resposta. Como o chamado é confirmado antes da
+notificação, a indisponibilidade externa não desfaz o registro. Se a confiabilidade
+da entrega se tornar um ASR, será necessário avaliar fila e processamento
+assíncrono, aceitando consistência eventual e maior operação.
