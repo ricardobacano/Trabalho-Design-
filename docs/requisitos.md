@@ -72,8 +72,10 @@ Ao abrir um chamado, o chamado e o evento inicial de histórico devem ser gravad
 na mesma transação. Se qualquer uma dessas gravações falhar, nenhuma deve ser
 confirmada.
 
-**Influência arquitetural:** exige persistência transacional compartilhada entre
-chamado e histórico. Favorece banco relacional e monólito com transação local.
+**Influência arquitetural:** exige que chamado e histórico permaneçam na mesma
+fronteira transacional. No protótipo, isso é realizado em um banco relacional
+compartilhado e uma transação local. Esse requisito, isoladamente, não obriga que
+todo o sistema seja um monólito.
 
 ### ASR-02 - Substituição da notificação
 
@@ -93,6 +95,10 @@ Se a combinação entre impacto, urgência e prioridade mudar, a alteração dev
 restrita à **MatrizPrioridade** e aos seus testes. Rotas, templates e persistência
 não devem conter cópias da matriz.
 
+Esse escopo considera mudanças nas combinações entre os níveis já existentes.
+Criar um novo nível de prioridade também afetaria **Prioridade**,
+**PoliticaPrazo**, seus testes e possivelmente a apresentação.
+
 **Influência arquitetural:** exige isolar a política em um elemento coeso do
 domínio, evitando condicionais duplicadas em outras camadas.
 
@@ -108,5 +114,5 @@ uma versão formal da matriz utilizada em cada chamado.
 4. Categoria sem equipe gera estado **EM_TRIAGEM**.
 5. Campo obrigatório ausente impede a gravação.
 6. A consulta de um solicitante não retorna chamados de outro.
-7. A confirmação é enviada ao **NotificadorFake**.
+7. A confirmação é registrada pelo **NotificadorFake**.
 8. Falha da notificação não remove o chamado já persistido.

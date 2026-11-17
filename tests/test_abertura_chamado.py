@@ -127,3 +127,21 @@ def test_consulta_exibe_apenas_chamados_do_usuario_demo(app, client):
     assert resposta.status_code == 200
     assert b"Sem acesso ao sistema" in resposta.data
     assert b"Chamado de outro usu" not in resposta.data
+
+
+def test_detalhe_de_outro_solicitante_retorna_404(app, client):
+    with app.app_context():
+        service = app.extensions["abrir_chamado_service"]
+        resultado = service.executar(
+            AbrirChamadoComando(
+                solicitante_id=2,
+                categoria_id=1,
+                resumo="Chamado do Bruno",
+                descricao="Este chamado não pertence à usuária de demonstração.",
+                impacto="BAIXO",
+                urgencia="BAIXA",
+            )
+        )
+
+    resposta = client.get(f"/chamados/{resultado.chamado_id}")
+    assert resposta.status_code == 404
