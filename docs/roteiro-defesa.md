@@ -11,8 +11,9 @@ chamado**; assunção por técnico e interações são evoluções documentadas.
 
 1. **Consistência:** chamado e evento inicial são confirmados juntos ou sofrem
    rollback juntos.
-2. **Notificação substituível:** o fake pode ser trocado por e-mail ou WhatsApp sem
-   alterar o caso de uso e as regras do chamado.
+2. **Notificação substituível:** o fake pode ser trocado por outra implementação do
+   mesmo contrato sem alterar prioridade, prazo ou persistência. Um canal que exija
+   novos dados de contato também exige evolução do catálogo e da composição.
 3. **Modificabilidade da prioridade:** a matriz muda em um único componente do
    domínio e em seus testes.
 
@@ -60,26 +61,26 @@ substituível e há uma variação concreta nesse ponto.
 
 ## 6. Perguntas prováveis
 
-**O técnico pode abrir chamado em nome do usuário?**  
+**O técnico pode abrir chamado em nome do usuário?**
 Não no protótipo. Essa inclusão exigiria definir autorização, identificação do
 solicitante representado e auditoria de quem realizou a ação. Ela foi mantida como
 evolução para não criar um segundo fluxo na fatia escolhida.
 
-**Por que SQLite?**  
+**Por que SQLite?**
 Porque a entrega é local, em processo único, e precisa demonstrar persistência e
 transação com baixo custo. Para uso institucional, a evolução proposta é
 PostgreSQL, migração de esquema, backup e testes de integração.
 
-**A matriz de prioridade foi copiada do ITIL?**  
+**A matriz de prioridade foi copiada do ITIL?**
 Não. A matriz e os prazos são políticas didáticas declaradas do protótipo. Elas
 estão isoladas justamente para poderem ser substituídas pela política real da
 instituição.
 
-**O que acontece se o notificador falhar?**  
+**O que acontece se o notificador falhar?**
 O chamado e o histórico já foram confirmados. A falha gera um aviso e não executa
 rollback. O custo é não haver repetição automática nesta versão.
 
-**O que muda se houver aplicativo móvel?**  
+**O que muda se houver aplicativo móvel?**
 A camada de apresentação ganha uma API HTTP e o aplicativo passa a consumi-la. O
 domínio, a matriz, o prazo e a persistência podem permanecer; autenticação e formato
 das respostas precisam ser projetados.

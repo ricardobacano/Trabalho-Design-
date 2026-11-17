@@ -65,9 +65,11 @@ chamado e histórico. Favorece banco relacional e monólito com transação loca
 
 ### ASR-02 - Substituição da notificação
 
-Deve ser possível substituir o **NotificadorFake** por e-mail, WhatsApp ou outro
-mecanismo sem modificar o caso de uso, a regra de prioridade ou a persistência do
-chamado.
+Deve ser possível substituir o **NotificadorFake** por outra implementação que
+preserve o contrato **ConfirmacaoAbertura**, sem modificar as regras de prioridade,
+prazo ou persistência do chamado. Se o novo canal exigir dados de contato que não
+existem no protótipo, como telefone ou preferência de canal, catálogo e composição
+também precisarão evoluir.
 
 **Influência arquitetural:** exige uma interface estável de notificação e composição
 da implementação no início da aplicação. A falha da notificação não pode desfazer
