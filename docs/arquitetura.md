@@ -135,6 +135,11 @@ deveria usar servidor WSGI, banco gerenciado, configuração externa e autentica
 
 | ASR | Resposta arquitetural |
 |---|---|
-| ASR-01 - consistência | Banco compartilhado e transação local para chamado e histórico. |
+| ASR-01 - consistência | Mesma fronteira transacional para chamado e histórico, realizada no banco compartilhado. |
 | ASR-02 - notificação substituível | Interface Notificador e implementação composta na inicialização. |
 | ASR-03 - prioridade modificável | Matriz isolada no domínio e coberta por nove testes; prioridade e prazo calculados são persistidos, mas a versão da matriz não é. |
+
+O ASR-01 restringe a fronteira de chamado e histórico, mas não determina sozinho a
+topologia de toda a aplicação. Os ASRs 02 e 03 justificam fronteiras internas e a
+organização em camadas. A escolha do monólito modular também considera a ausência
+de requisitos de implantação independente, escala por módulo ou equipes autônomas.

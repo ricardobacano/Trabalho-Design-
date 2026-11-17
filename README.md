@@ -55,7 +55,7 @@ pytest
 
 Os testes cobrem as nove combinações da matriz de prioridade, os quatro prazos,
 abertura normal, triagem, validação, rollback transacional, histórico, isolamento
-da consulta e falha do notificador.
+da lista e do detalhe por solicitante e falha do notificador.
 
 ## Arquitetura
 
@@ -78,7 +78,7 @@ existe porque a dependência externa deve ser substituível.
 | [Modelo de domínio](docs/modelo-dominio.md) | Responsabilidades, relações, GRASP, coesão, acoplamento e SOLID. |
 | [Prioridade e prazo](docs/prioridade-e-ciclo-de-vida.md) | Matriz, prazo inicial e estados considerados. |
 | [Arquitetura](docs/arquitetura.md) | Componentes, dependências, comunicação, persistência e implantação. |
-| [Trade-offs](docs/tradeoffs.md) | Comparação com monólito simples e microsserviços. |
+| [Trade-offs](docs/tradeoffs.md) | Comparação de implantação e organização interna, incluindo microsserviços, hexagonal e microkernel. |
 | [Evolução](docs/evolucao.md) | Banco, notificação, aplicativo móvel, aumento de carga e implantação independente. |
 | [Plano e testes](docs/plano-implementacao-e-testes.md) | Escopo implementado e rastreabilidade dos testes. |
 | [Roteiro de defesa](docs/roteiro-defesa.md) | Sequência de apresentação e respostas concretas a perguntas prováveis. |

@@ -60,11 +60,11 @@ package "Chamados - domínio" {
 }
 
 package "Chamados - aplicação e persistência" {
-  class AbrirChamadoService <<controller>> {
+  class AbrirChamadoService <<GRASP Controller>> {
     +executar(comando): ResultadoAbertura
   }
 
-  class ConsultarChamadosService <<controller>> {
+  class ConsultarChamadosService <<GRASP Controller>> {
     +listar_do_solicitante(id): List<ChamadoResumo>
     +detalhar_do_solicitante(chamado_id, solicitante_id): ChamadoDetalhe?
   }

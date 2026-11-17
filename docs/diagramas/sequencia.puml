@@ -14,6 +14,11 @@ entity EventoHistorico
 database ChamadoRepositorySQLAlchemy as ChamadoRepo
 participant Notificador as Notificador
 
+note right of Notificador
+  Na demonstração, o NotificadorFake
+  apenas registra a confirmação em memória.
+end note
+
 Solicitante -> Rota: POST dados do chamado
 Rota -> Service: executar(comando)
 Service -> UserRepo: buscar_por_id(solicitante_id)
@@ -50,7 +55,7 @@ else categoria válida
   deactivate ChamadoRepo
 
   Service -> Notificador: confirmar_abertura(...)
-  alt confirmação enviada
+  alt confirmação processada pelo notificador
     Notificador --> Service: sucesso
   else falha da notificação
     Notificador --> Service: exceção
