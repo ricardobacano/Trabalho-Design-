@@ -72,7 +72,7 @@ existe porque a dependência externa deve ser substituível.
 | [Prioridade e prazo](docs/prioridade-e-ciclo-de-vida.md) | Matriz, prazo inicial e estados considerados. |
 | [Arquitetura](docs/arquitetura.md) | Componentes, dependências, comunicação, persistência e implantação. |
 | [Trade-offs](docs/tradeoffs.md) | Comparação com monólito simples e microsserviços. |
-| [Evolução](docs/evolucao.md) | Troca de banco e de mecanismo de notificação. |
+| [Evolução](docs/evolucao.md) | Banco, notificação, aplicativo móvel, aumento de carga e implantação independente. |
 | [Plano e testes](docs/plano-implementacao-e-testes.md) | Escopo implementado e rastreabilidade dos testes. |
 | [Roteiro de defesa](docs/roteiro-defesa.md) | Sequência de apresentação e respostas concretas a perguntas prováveis. |
 

@@ -24,7 +24,9 @@ Arquitetura Hexagonal.
 | Notificações | Contrato de confirmação e implementação simulada. | **app/notificacoes** |
 | Infraestrutura comum | Inicialização e sessão do banco SQLite. | **app/banco.py** |
 
-Os módulos compartilham o processo e a transação local. Eles não são
+Os módulos executam no mesmo processo. Chamados e catálogo usam o banco SQLite
+compartilhado; chamado e evento inicial de histórico são gravados na mesma
+transação. A notificação ocorre depois do commit. Os módulos não são
 microsserviços e não possuem implantação ou bancos independentes.
 
 ## 3. Camadas e dependências
@@ -51,19 +53,20 @@ regras que não dependem de HTTP ou templates.
 Os repositórios SQLAlchemy convertem e persistem os objetos no SQLite.
 **NotificadorFake** simula a dependência de confirmação.
 
-Fluxo de dependência:
+Fluxo de chamadas e dependências no protótipo:
 
-~~~text
-Navegador
-  -> Apresentação
-  -> Aplicação
-  -> Domínio
-  -> Persistência SQLAlchemy
-  -> SQLite
-~~~
+- O navegador acessa a apresentação por HTTP.
+- A apresentação chama os serviços de aplicação para abrir e consultar chamados.
+  Para montar as páginas, ela também consulta diretamente os repositórios do
+  catálogo para obter o usuário de demonstração e as categorias.
+- Os serviços de aplicação usam as regras do domínio e os repositórios SQLAlchemy.
+- Os repositórios SQLAlchemy acessam o SQLite.
+- **AbrirChamadoService** depende da interface **Notificador**, implementada por
+  **NotificadorFake** nesta demonstração e escolhida na criação da aplicação.
 
-A aplicação também depende da interface **Notificador**, cuja implementação
-simulada é escolhida na criação da aplicação.
+A consulta direta do catálogo pela apresentação é uma simplificação localizada
+do protótipo. Em uma evolução com autenticação real, ela pode ser coordenada por
+um caso de uso da aplicação.
 
 ## 4. Fluxo implementado de abertura
 

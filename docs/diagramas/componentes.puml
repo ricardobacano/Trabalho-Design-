@@ -29,6 +29,7 @@ database "SQLite" as DB
 
 Solicitante --> Web : HTTP
 Web --> App : chamada local
+Web --> Catalog : usuário demo e categorias
 App --> Domain : cria e aplica regras
 App --> Catalog : busca categoria e usuário
 App --> TicketPersistence : transação local
