@@ -11,6 +11,10 @@ O protótipo implementa uma pequena fatia vertical: abertura e consulta de chama
 pelo solicitante. A solução completa poderá incluir assunção por técnico,
 interações e demais transições de estado.
 
+Na abertura demonstrada, o solicitante informa categoria, impacto e urgência; a
+aplicação calcula a prioridade e associa a equipe padrão da categoria, se houver.
+O suporte não revisa nem reclassifica o chamado nessa fatia.
+
 ## 2. Atores
 
 | Ator | Responsabilidade |
@@ -24,18 +28,26 @@ No protótipo, o técnico **não abre chamado em nome do solicitante**. Essa
 possibilidade foi excluída para manter a fatia pequena e evitar um segundo fluxo de
 autorização e auditoria.
 
+Não existe login no protótipo: qualquer visitante da instância atua como o mesmo
+solicitante de demonstração configurado. O filtro por identificador na consulta
+não representa autorização entre pessoas reais.
+
 ## 3. Requisitos funcionais
 
 | ID | Requisito | Protótipo |
 |---|---|---|
 | RF-01 | O solicitante deve abrir um chamado informando resumo, descrição, categoria, impacto e urgência. | Implementado |
 | RF-02 | O sistema deve calcular a prioridade inicial pela combinação de impacto e urgência. | Implementado |
-| RF-03 | O sistema deve encaminhar o chamado à equipe da categoria; sem equipe configurada, deve encaminhá-lo à triagem. | Implementado |
+| RF-03 | O sistema deve associar a equipe padrão da categoria e iniciar o chamado em **EM_FILA**; sem equipe, deve iniciá-lo em **EM_TRIAGEM**. | Implementado |
 | RF-04 | O sistema deve registrar a criação do chamado em seu histórico. | Implementado |
 | RF-05 | O solicitante deve consultar a lista e os detalhes dos próprios chamados. | Implementado |
 | RF-06 | O sistema deve calcular e exibir um prazo inicial de atendimento conforme a prioridade. | Implementado |
 | RF-07 | Um técnico deve poder assumir chamados da equipe e alterar o estado para Em atendimento. | Evolução |
 | RF-08 | Técnicos e solicitantes devem registrar interações visíveis conforme o seu papel. | Evolução |
+
+Em RF-03, associar uma equipe não implica que um técnico tenha recebido ou assumido
+o chamado. Em RF-05, “próprios chamados” são os do usuário fixo de demonstração;
+não há identificação individual de cada visitante.
 
 ## 4. Restrições
 
@@ -50,7 +62,7 @@ autorização e auditoria.
 - **R-06:** o prazo do protótipo é calculado em horas corridas. Calendário comercial,
   feriados e pausas são evolução.
 - **R-07:** somente chamados do usuário de demonstração podem ser retornados pela
-  consulta usada no protótipo.
+  consulta usada no protótipo; visitantes distintos compartilham esse usuário.
 
 ## 5. Requisitos arquiteturalmente significativos
 
@@ -68,8 +80,8 @@ chamado e histórico. Favorece banco relacional e monólito com transação loca
 Deve ser possível substituir o **NotificadorFake** por outra implementação que
 preserve o contrato **ConfirmacaoAbertura**, sem modificar as regras de prioridade,
 prazo ou persistência do chamado. Se o novo canal exigir dados de contato que não
-existem no protótipo, como telefone ou preferência de canal, catálogo e composição
-também precisarão evoluir.
+existem no protótipo, como telefone ou preferência de canal, o catálogo e a montagem
+da confirmação no serviço também precisarão evoluir.
 
 **Influência arquitetural:** exige uma interface estável de notificação e composição
 da implementação no início da aplicação. A falha da notificação não pode desfazer
@@ -83,6 +95,10 @@ não devem conter cópias da matriz.
 
 **Influência arquitetural:** exige isolar a política em um elemento coeso do
 domínio, evitando condicionais duplicadas em outras camadas.
+
+A prioridade e o prazo calculados ficam gravados em cada chamado. Alterar a matriz
+afeta novas aberturas, não recalcula os registros antigos. O protótipo não grava
+uma versão formal da matriz utilizada em cada chamado.
 
 ## 6. Critérios de aceite da fatia vertical
 

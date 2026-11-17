@@ -16,6 +16,9 @@ abrir chamado
 
 A consulta obrigatória lista e detalha somente os chamados do solicitante de
 demonstração.
+Categoria, impacto e urgência são informados no formulário; a prioridade é
+calculada automaticamente. O encaminhamento atribui equipe e estado, sem tela
+de atendimento por técnico. O usuário é fixo na configuração, sem login real.
 
 ## 2. Rastreabilidade
 
@@ -46,7 +49,10 @@ demonstração.
 7. rollback completo quando a gravação do histórico falha;
 8. chamada ao notificador;
 9. preservação do chamado quando a notificação falha;
-10. consulta sem vazamento de chamados de outro usuário.
+10. lista filtrada, sem incluir chamados de outro identificador de solicitante.
+
+O detalhe também aplica o filtro por solicitante no código, mas ainda não há um
+teste automatizado específico para o acesso direto ao detalhe de outro usuário.
 
 ## 5. Limites
 

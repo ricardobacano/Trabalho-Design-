@@ -32,18 +32,19 @@ facilita a transação, mas exige migração coordenada de todo o monólito.
 
 - nova classe que implemente **Notificador**;
 - configuração de credenciais e endpoint;
-- dados de contato e preferência de canal, caso a nova integração não utilize o
-  e-mail já disponível;
+- dados de contato e preferência de canal, inclusive mudanças no catálogo, na
+  tabela de usuários e possivelmente no formulário, caso a nova
+  integração não utilize o e-mail já disponível;
 - composição da implementação na inicialização;
 - testes de integração e tratamento de indisponibilidade.
 
 ### Elementos que permanecem
 
-- formulário e consulta;
-- regra de prioridade e prazo;
+- consulta de chamados;
+- regras de domínio para criar o chamado, definir prioridade e prazo;
 - **Chamado** e **EventoHistorico**;
-- repositório e esquema do banco;
-- regras internas de **Chamado**, prioridade, prazo e persistência.
+- repositório e tabelas de chamados, desde que o novo canal apenas substitua
+  o mecanismo de confirmação após a persistência.
 
 ### Decisões que ajudam ou dificultam
 
@@ -55,6 +56,11 @@ provedor lento aumenta o tempo de resposta. Como o chamado é confirmado antes d
 notificação, a indisponibilidade externa não desfaz o registro. Se a confiabilidade
 da entrega se tornar um ASR, será necessário avaliar fila e processamento
 assíncrono, aceitando consistência eventual e maior operação.
+
+Para e-mail usando o endereço já presente, o esquema do catálogo pode permanecer.
+Para um canal que exija telefone ou preferência de contato, o esquema do catálogo
+e eventualmente o formulário precisam mudar; isso não obriga a alterar as tabelas
+de chamados ou a matriz de prioridade.
 
 ## 3. Inclusão de aplicativo móvel
 
