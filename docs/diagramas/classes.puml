@@ -106,7 +106,12 @@ UsuarioModel "1" -- "0..*" ChamadoModel
 CategoriaModel "1" -- "0..*" ChamadoModel
 EquipeModel "0..1" -- "0..*" CategoriaModel
 EquipeModel "0..1" -- "0..*" ChamadoModel
-ChamadoModel "1" *-- "1..*" EventoHistoricoModel
+ChamadoModel "1" *-- "0..*" EventoHistoricoModel : histórico
+note on link
+  Na abertura, o repositório cria um evento inicial
+  e confirma ambos na mesma transação.
+  O esquema não exige mínimo de eventos.
+end note
 
 AbrirChamadoService --> CategoriaRepositorySQLAlchemy : consulta
 AbrirChamadoService --> UsuarioRepositorySQLAlchemy : consulta

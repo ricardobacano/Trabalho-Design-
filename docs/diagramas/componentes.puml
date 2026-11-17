@@ -7,9 +7,8 @@ left to right direction
 actor Solicitante
 
 node "Processo Flask\n(monólito modular)" {
-  component "Apresentação Web\nrotas + Jinja2" as Web
-
   package "Módulo Chamados" {
+    component "Apresentação Web\nrotas + Jinja2" as Web
     component "Aplicação\nAbrir e Consultar Chamados" as App
     component "Domínio\nChamado, prioridade e prazo" as Domain
     component "Persistência de chamados\nSQLAlchemy" as TicketPersistence
@@ -21,7 +20,7 @@ node "Processo Flask\n(monólito modular)" {
 
   package "Módulo Notificações" {
     interface Notificador
-    component "NotificadorFake\n<<simulação externa>>" as Fake
+    component "NotificadorFake\n(simulação da integração externa)" as Fake
   }
 }
 

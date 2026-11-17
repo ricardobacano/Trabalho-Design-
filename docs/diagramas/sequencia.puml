@@ -54,7 +54,7 @@ else categoria válida
     Notificador --> Service: sucesso
   else falha da notificação
     Notificador --> Service: exceção
-    Service -> Service: manter chamado e registrar aviso
+    Service -> Service: definir aviso para o usuário (chamado já gravado)
   end
   Service --> Rota: ResultadoAbertura
   Rota --> Solicitante: redirecionar para detalhe
