@@ -4,8 +4,10 @@
 
 A plataforma organiza chamados de suporte que hoje poderiam ficar sem prioridade,
 destino ou histórico. O sistema completo prevê solicitantes, técnicos e
-coordenadores. O protótipo comprova a fatia de **abrir e consultar o próprio
-chamado**; assunção por técnico e interações são evoluções documentadas.
+coordenadores. O protótipo comprova a fatia de **abrir e consultar chamados do
+usuário de demonstração**; assunção por técnico e interações são evoluções
+documentadas. Não há login: todos os visitantes da instância atuam como o mesmo
+usuário demo, e o filtro da consulta não equivale a autorização entre pessoas.
 
 ## 2. Três ASRs
 
@@ -13,7 +15,8 @@ chamado**; assunção por técnico e interações são evoluções documentadas.
    rollback juntos.
 2. **Notificação substituível:** o fake pode ser trocado por outra implementação do
    mesmo contrato sem alterar prioridade, prazo ou persistência. Um canal que exija
-   novos dados de contato também exige evolução do catálogo e da composição.
+   novos dados de contato também exige evolução do catálogo e da montagem da
+   confirmação no serviço.
 3. **Modificabilidade da prioridade:** a matriz muda em um único componente do
    domínio e em seus testes.
 
@@ -54,8 +57,9 @@ substituível e há uma variação concreta nesse ponto.
 2. Mostrar prioridade **P2_ALTA**, prazo de 8 horas e destino **Service Desk**.
 3. Abrir outro chamado em **Outros - requer triagem**.
 4. Mostrar estado **EM_TRIAGEM** e o evento inicial no histórico.
-5. Abrir a lista e provar que a consulta retorna somente os chamados do usuário de
-   demonstração.
+5. Abrir a lista do usuário de demonstração. Explicar que o filtro por
+   solicitante é verificado no teste automatizado da lista, sem alegar
+   autenticação ou isolamento de visitantes reais.
 6. Executar `pytest` e destacar os 19 testes, especialmente matriz, rollback e
    falha de notificação.
 
@@ -66,6 +70,16 @@ Não no protótipo. Essa inclusão exigiria definir autorização, identificaç�
 solicitante representado e auditoria de quem realizou a ação. Ela foi mantida como
 evolução para não criar um segundo fluxo na fatia escolhida.
 
+**O suporte classifica o chamado? O que significa encaminhar à equipe?**
+O solicitante informa categoria, impacto e urgência. A prioridade é calculada pela
+matriz; a equipe da categoria é associada ao chamado em **EM_FILA**. O suporte ainda
+não possui tela para revisar a classificação, receber ou assumir a solicitação.
+
+**Pessoas diferentes conseguem ver apenas seus próprios chamados?**
+Ainda não. Qualquer navegador acessa o usuário fixo de demonstração. As consultas
+filtram por esse identificador e não retornam registros de outros IDs, mas não há
+login nem autorização individual. Isso exigiria autenticação em uma evolução.
+
 **Por que SQLite?**
 Porque a entrega é local, em processo único, e precisa demonstrar persistência e
 transação com baixo custo. Para uso institucional, a evolução proposta é
@@ -75,6 +89,11 @@ PostgreSQL, migração de esquema, backup e testes de integração.
 Não. A matriz e os prazos são políticas didáticas declaradas do protótipo. Elas
 estão isoladas justamente para poderem ser substituídas pela política real da
 instituição.
+
+**A matriz é versionada? Uma mudança altera chamados antigos?**
+O chamado guarda prioridade e prazo calculados na abertura, portanto uma mudança
+na matriz afeta novas aberturas e não recalcula os registros existentes. O banco
+não guarda uma versão formal da matriz aplicada a cada chamado.
 
 **O que acontece se o notificador falhar?**
 O chamado e o histórico já foram confirmados. A falha gera um aviso e não executa

@@ -68,9 +68,14 @@ A consulta direta do catálogo pela apresentação é uma simplificação locali
 do protótipo. Em uma evolução com autenticação real, ela pode ser coordenada por
 um caso de uso da aplicação.
 
+O identificador do solicitante é fixado na configuração da demonstração. O
+repositório filtra as consultas por esse identificador, mas a aplicação não
+autentica cada visitante: navegadores diferentes atuam como o mesmo usuário demo.
+
 ## 4. Fluxo implementado de abertura
 
-1. O solicitante de demonstração preenche o formulário.
+1. O solicitante de demonstração informa categoria, impacto e urgência, além dos
+   dados descritivos, no formulário.
 2. A apresentação valida a forma dos dados e cria **AbrirChamadoComando**.
 3. **AbrirChamadoService** busca o solicitante e a categoria pelos repositórios do
    catálogo.
@@ -82,6 +87,9 @@ um caso de uso da aplicação.
 
 Se a categoria não tiver equipe, o chamado é criado em **EM_TRIAGEM**. Se a
 notificação falhar, o chamado permanece gravado e a interface apresenta um aviso.
+A equipe associada a um chamado em **EM_FILA** é apenas seu destino inicial; não
+existe tela para recebimento ou assunção por técnico. Também não ocorre
+classificação manual posterior pelo suporte nesta fatia.
 
 ## 5. Comunicação
 
@@ -110,7 +118,7 @@ a gravação provoca rollback dos dois registros.
 **NotificadorFake** registra confirmações em memória. Uma implementação futura que
 preserve o contrato pode enviar e-mail ou outra mensagem sem alterar prioridade,
 prazo ou persistência. Canais que exijam novos dados de contato também afetam o
-catálogo e a composição da aplicação.
+catálogo e a montagem da confirmação no serviço.
 
 ## 8. Implantação
 
@@ -129,4 +137,4 @@ deveria usar servidor WSGI, banco gerenciado, configuração externa e autentica
 |---|---|
 | ASR-01 - consistência | Banco compartilhado e transação local para chamado e histórico. |
 | ASR-02 - notificação substituível | Interface Notificador e implementação composta na inicialização. |
-| ASR-03 - prioridade modificável | Matriz isolada no domínio e coberta por nove testes. |
+| ASR-03 - prioridade modificável | Matriz isolada no domínio e coberta por nove testes; prioridade e prazo calculados são persistidos, mas a versão da matriz não é. |

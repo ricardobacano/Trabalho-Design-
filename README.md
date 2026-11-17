@@ -3,16 +3,18 @@
 Trabalho final da disciplina **Design e Arquitetura de Software (2026-2)**, Tema 16.
 
 O repositório contém a documentação arquitetural e um protótipo executável de uma
-plataforma de chamados. A fatia vertical implementada permite que um solicitante de
-demonstração abra um chamado, receba prioridade e prazo iniciais, seja encaminhado
-para uma equipe ou para triagem e consulte seus próprios chamados.
+plataforma de chamados. A fatia vertical implementada permite abrir um chamado em
+nome do usuário de demonstração, calcular prioridade e prazo iniciais, associar
+uma equipe ou triagem e consultar os chamados desse usuário.
 
 ## O que está implementado
 
 - abertura de chamado com resumo, descrição, categoria, impacto e urgência;
-- cálculo da prioridade pela matriz impacto x urgência;
+- cálculo automático da prioridade pela matriz impacto x urgência, a partir dos
+  valores informados pelo solicitante;
 - cálculo de prazo inicial em horas corridas;
-- encaminhamento para a equipe da categoria;
+- atribuição da equipe padrão da categoria e estado **EM_FILA**, sem tela para o
+  técnico receber ou assumir o chamado;
 - fluxo alternativo para categoria sem equipe: fila de triagem;
 - persistência transacional do chamado e do evento inicial de histórico;
 - consulta de lista e detalhe dos chamados do usuário de demonstração;
@@ -20,8 +22,13 @@ para uma equipe ou para triagem e consulte seus próprios chamados.
 - tolerância à falha da notificação após a persistência;
 - testes automatizados da regra e da fatia vertical.
 
-O protótipo não implementa login completo. O usuário de demonstração é carregado
+O protótipo não implementa login. O usuário de demonstração é carregado
 automaticamente, conforme permitido pelo enunciado.
+
+Qualquer navegador que acesse a instância atua como esse mesmo usuário de
+demonstração. A consulta filtra os chamados pelo identificador configurado, mas não
+autentica visitantes nem separa pessoas reais. O suporte não classifica ou
+reclassifica manualmente os chamados nesta fatia.
 
 ## Executar
 
@@ -93,7 +100,8 @@ existe porque a dependência externa deve ser substituível.
 
 ## Limites conscientes do protótipo
 
-- somente o solicitante abre o próprio chamado;
+- toda abertura é registrada em nome do solicitante de demonstração; não há
+  abertura em nome de terceiros por técnico;
 - autenticação real, assunção por técnico, interações e mudanças posteriores de
   estado estão modeladas como evolução, não implementadas;
 - o prazo inicial usa horas corridas; calendário comercial, pausas e feriados são

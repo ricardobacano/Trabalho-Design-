@@ -27,9 +27,17 @@
 - Um chamado possui um ou mais eventos de histórico ao longo de sua vida.
 - A matriz calcula uma prioridade para cada combinação válida de impacto e urgência.
 
+O evento inicial é garantido pelo caso de uso de abertura e pela gravação conjunta
+na transação. A associação ORM aceita estruturalmente zero ou mais eventos; o
+esquema do banco não impõe sozinho o mínimo de um evento por chamado.
+
 ## 3. Distribuição de responsabilidades
 
 ### Abertura
+
+O solicitante de demonstração escolhe categoria, impacto e urgência. A prioridade
+é calculada automaticamente; não há classificação ou revisão manual pelo suporte
+na fatia implementada.
 
 O **AbrirChamadoService** recebe o evento do sistema, consulta o solicitante e a
 categoria pelos repositórios, pede que **Chamado** seja criado, solicita a
@@ -43,12 +51,18 @@ define o estado inicial:
 - **EM_TRIAGEM**, quando a categoria não possui equipe.
 
 O repositório grava o chamado e o evento inicial na mesma transação.
+A associação de uma equipe significa destino inicial em **EM_FILA**, sem recebimento
+ou assunção por técnico no protótipo.
 
 ### Consulta
 
 O **ConsultarChamadosService** recebe o identificador do solicitante e pede ao
 repositório a lista ou o detalhe aplicando esse filtro. A apresentação recebe
-somente o resultado permitido para aquele usuário.
+somente o resultado filtrado por esse identificador.
+
+O identificador é fixo na demonstração e não vem de uma autenticação individual:
+visitantes diferentes acessam o mesmo usuário demo. O filtro impede retornar
+registros de outro identificador, mas não protege contas de pessoas reais.
 
 ## 4. GRASP
 
