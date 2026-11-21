@@ -47,11 +47,13 @@ class UsuarioRepositorySQLAlchemy:
         registro = db.session.get(UsuarioModel, usuario_id)
         if registro is None:
             return None
-        return UsuarioEncontrado(
-            id=registro.id,
-            nome=registro.nome,
-            email=registro.email,
-        )
+        else:
+            usuario = UsuarioEncontrado(
+                id=registro.id,
+                nome=registro.nome,
+                email=registro.email,
+            )
+            return usuario
 
 
 class CategoriaRepositorySQLAlchemy:
@@ -59,23 +61,37 @@ class CategoriaRepositorySQLAlchemy:
         registro = db.session.get(CategoriaModel, categoria_id)
         if registro is None:
             return None
-        return CategoriaEncontrada(
-            id=registro.id,
-            nome=registro.nome,
-            equipe_id=registro.equipe_id,
-            equipe_nome=registro.equipe.nome if registro.equipe else None,
-        )
+        else:
+            if registro.equipe is not None:
+                nome_equipe = registro.equipe.nome
+            else:
+                nome_equipe = None
+
+            categoria = CategoriaEncontrada(
+                id=registro.id,
+                nome=registro.nome,
+                equipe_id=registro.equipe_id,
+                equipe_nome=nome_equipe,
+            )
+            return categoria
 
     def listar(self) -> list[CategoriaEncontrada]:
         registros = db.session.execute(
             db.select(CategoriaModel).order_by(CategoriaModel.nome)
         ).scalars()
-        return [
-            CategoriaEncontrada(
+        categorias = []
+        for registro in registros:
+            if registro.equipe is not None:
+                nome_equipe = registro.equipe.nome
+            else:
+                nome_equipe = None
+
+            categoria = CategoriaEncontrada(
                 id=registro.id,
                 nome=registro.nome,
                 equipe_id=registro.equipe_id,
-                equipe_nome=registro.equipe.nome if registro.equipe else None,
+                equipe_nome=nome_equipe,
             )
-            for registro in registros
-        ]
+            categorias.append(categoria)
+
+        return categorias

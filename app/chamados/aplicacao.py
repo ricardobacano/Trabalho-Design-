@@ -52,16 +52,17 @@ class AbrirChamadoService:
         solicitante = self.usuario_repository.buscar_por_id(comando.solicitante_id)
         if solicitante is None:
             raise RegraNegocioError("O solicitante informado não existe.")
+        else:
+            categoria = self.categoria_repository.buscar_por_id(comando.categoria_id)
 
-        categoria = self.categoria_repository.buscar_por_id(comando.categoria_id)
         if categoria is None:
             raise RegraNegocioError("A categoria informada não existe.")
-
-        try:
-            impacto = Impacto(comando.impacto)
-            urgencia = Urgencia(comando.urgencia)
-        except ValueError as erro:
-            raise RegraNegocioError("Impacto ou urgência inválidos.") from erro
+        else:
+            try:
+                impacto = Impacto(comando.impacto)
+                urgencia = Urgencia(comando.urgencia)
+            except ValueError as erro:
+                raise RegraNegocioError("Impacto ou urgência inválidos.") from erro
 
         chamado = Chamado.abrir(
             solicitante_id=comando.solicitante_id,
@@ -75,25 +76,26 @@ class AbrirChamadoService:
         evento = EventoHistorico.abertura(chamado, categoria.nome, categoria.equipe_nome)
         chamado_id = self.chamado_repository.salvar_novo(chamado, evento)
 
-        aviso = None
         try:
-            self.notificador.confirmar_abertura(
-                ConfirmacaoAbertura(
-                    chamado_id=chamado_id,
-                    destinatario=solicitante.email,
-                    prioridade=chamado.prioridade.value,
-                )
+            confirmacao = ConfirmacaoAbertura(
+                chamado_id=chamado_id,
+                destinatario=solicitante.email,
+                prioridade=chamado.prioridade.value,
             )
+            self.notificador.confirmar_abertura(confirmacao)
         except Exception:
             # O chamado já foi persistido; a falha secundária não desfaz a operação.
             aviso = "Chamado criado, mas a confirmação não pôde ser enviada."
+        else:
+            aviso = None
 
-        return ResultadoAbertura(
+        resultado = ResultadoAbertura(
             chamado_id=chamado_id,
             prioridade=chamado.prioridade.value,
             estado=chamado.estado.value,
             aviso_notificacao=aviso,
         )
+        return resultado
 
 
 class ConsultarChamadosService:
@@ -103,9 +105,11 @@ class ConsultarChamadosService:
         self.chamado_repository = chamado_repository
 
     def listar_do_solicitante(self, solicitante_id: int):
-        return self.chamado_repository.listar_por_solicitante(solicitante_id)
+        chamados = self.chamado_repository.listar_por_solicitante(solicitante_id)
+        return chamados
 
     def detalhar_do_solicitante(self, chamado_id: int, solicitante_id: int):
-        return self.chamado_repository.buscar_por_id_e_solicitante(
+        chamado = self.chamado_repository.buscar_por_id_e_solicitante(
             chamado_id, solicitante_id
         )
+        return chamado

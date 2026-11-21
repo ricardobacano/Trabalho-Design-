@@ -9,4 +9,5 @@ class NotificadorFake(Notificador):
     def confirmar_abertura(self, confirmacao: ConfirmacaoAbertura) -> None:
         if self.falhar:
             raise RuntimeError("Falha simulada no serviço de notificação")
-        self.confirmacoes.append(confirmacao)
+        else:
+            self.confirmacoes.append(confirmacao)
