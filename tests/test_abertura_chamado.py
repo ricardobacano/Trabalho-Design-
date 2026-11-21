@@ -1,4 +1,6 @@
 import pytest
+from datetime import datetime, timezone
+from sqlalchemy.exc import IntegrityError
 
 from app.banco import db
 from app.chamados.aplicacao import AbrirChamadoComando, AbrirChamadoService
@@ -78,6 +80,23 @@ def test_falha_ao_gravar_historico_desfaz_todo_o_commit(app, monkeypatch):
 
         assert ChamadoModel.query.count() == 0
         assert EventoHistoricoModel.query.count() == 0
+
+
+def test_sqlite_rejeita_historico_com_chamado_inexistente(app):
+    with app.app_context():
+        assert db.session.execute(db.text("PRAGMA foreign_keys")).scalar_one() == 1
+
+        db.session.add(
+            EventoHistoricoModel(
+                chamado_id=999,
+                tipo="CHAMADO_ABERTO",
+                descricao="Evento sem chamado correspondente.",
+                criado_em=datetime.now(timezone.utc),
+            )
+        )
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+        db.session.rollback()
 
 
 def test_falha_de_notificacao_nao_desfaz_chamado(app):

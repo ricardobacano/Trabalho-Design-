@@ -35,13 +35,13 @@ else categoria válida
   Chamado -> Chamado: validar campos
   Chamado -> Matriz: calcular(impacto, urgencia)
   Matriz --> Chamado: prioridade
-  Chamado -> Prazo: calcular_prazo(prioridade, criado_em)
-  Prazo --> Chamado: prazo_atendimento
   alt categoria possui equipe
     Chamado -> Chamado: estado = EM_FILA
   else categoria sem equipe
     Chamado -> Chamado: estado = EM_TRIAGEM
   end
+  Chamado -> Prazo: calcular_prazo(prioridade, criado_em)
+  Prazo --> Chamado: prazo_atendimento
   Chamado --> Service: chamado válido
   deactivate Chamado
 

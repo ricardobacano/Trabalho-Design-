@@ -14,6 +14,8 @@ organização interna.
 |---|---|---|---|
 | Modificabilidade | Baixa se regras, SQL e HTTP forem misturados. | Mudanças ficam concentradas nos módulos e camadas. | Alta independência quando fronteiras estão maduras. |
 | Consistência | Transações locais simples. | Transações locais simples e fronteiras explícitas. | Continua local dentro de um serviço; operações entre bancos de serviços exigem coordenação ou consistência eventual. |
+| Desempenho | Chamadas locais evitam rede, mas regras misturadas dificultam localizar gargalos. | Chamadas locais e regras isoladas permitem medir pontos específicos; a aplicação escala como um todo. | Há custo de comunicação de rede; escala isolada pode compensar quando um serviço tiver carga própria comprovada. |
+| Disponibilidade | Uma implantação concentra falhas; integrações acopladas podem afetar a abertura. | A implantação ainda é conjunta, mas a falha da notificação após o commit não desfaz a abertura. | Serviços podem isolar algumas falhas, porém introduzem indisponibilidade parcial e dependências de rede. |
 | Testabilidade | Pode exigir interface e banco se regras não forem isoladas. | Regras podem ser testadas sem HTTP. | Exige testes de contrato e de comunicação. |
 | Implantação | Um artefato simples. | Um artefato simples. | Várias implantações e configuração de rede. |
 | Escalabilidade | Escala a aplicação inteira. | Escala a aplicação inteira. | Permite escala independente. |
