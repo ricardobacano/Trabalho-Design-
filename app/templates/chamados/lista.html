@@ -12,7 +12,7 @@
   {% if chamados %}
     <div class="tabela-responsiva">
       <table>
-        <thead><tr><th>Protocolo</th><th>Resumo</th><th>Prioridade</th><th>Destino</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr><th>Protocolo</th><th>Resumo</th><th>Prioridade</th><th>Destino</th><th>Estado</th><th>Prazo</th><th></th></tr></thead>
         <tbody>
           {% for chamado in chamados %}
             <tr>
@@ -21,6 +21,7 @@
               <td><span class="etiqueta">{{ chamado.prioridade }}</span></td>
               <td>{{ chamado.equipe }}</td>
               <td>{{ chamado.estado }}</td>
+              <td>{{ chamado.prazo_atendimento.strftime('%d/%m/%Y %H:%M') }}</td>
               <td><a href="{{ url_for('chamados.detalhar', chamado_id=chamado.id) }}">Detalhes</a></td>
             </tr>
           {% endfor %}
