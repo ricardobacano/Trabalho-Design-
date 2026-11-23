@@ -110,7 +110,10 @@ O protótipo utiliza um banco SQLite compartilhado. As tabelas principais são:
 - **eventos_historico**.
 
 Chamado e evento de abertura são confirmados pelo mesmo commit. Uma exceção durante
-a gravação provoca rollback dos dois registros.
+a gravação provoca rollback dos dois registros. Cada conexão SQLite ativa
+`PRAGMA foreign_keys=ON`, impedindo que um evento referencie um chamado inexistente.
+O mínimo de um evento por chamado é garantido pelo fluxo de abertura, não por uma
+restrição de cardinalidade do esquema.
 
 ## 7. Integração externa
 

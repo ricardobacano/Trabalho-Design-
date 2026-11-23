@@ -82,7 +82,7 @@ fixas do fluxo, e não plugins opcionais com instalação e ciclo de vida própr
 5. Abrir a lista do usuário de demonstração. Explicar que o filtro por
    solicitante é verificado no teste automatizado da lista, sem alegar
    autenticação ou isolamento de visitantes reais.
-6. Executar `pytest` e destacar os 20 testes, especialmente matriz, rollback,
+6. Executar `pytest` e destacar os 21 testes, especialmente matriz, rollback,
    isolamento da consulta e falha de notificação.
 
 ## 6. Perguntas prováveis
@@ -158,3 +158,20 @@ Notificações é a candidata mais simples porque não precisa retirar chamado e
 histórico da mesma transação. Seriam necessários contrato de rede, autenticação,
 tratamento de indisponibilidade e observabilidade. Entrega garantida exigiria
 persistir a intenção e processá-la posteriormente, por exemplo com outbox e fila.
+
+## 8. Cadeias para ensaiar na defesa
+
+Para cada ASR, seguir a mesma ordem: requisito, decisão registrada, ponto do código,
+teste e custo aceito. Abrir esses arquivos durante o estudo ajuda a relacionar a
+explicação à implementação real.
+
+| Cadeia | Explicação concreta | Evidência e consequência |
+|---|---|---|
+| RF-04 → ASR-01 → ADR-002 | A abertura cria um chamado e um evento inicial inseparáveis. | `ChamadoRepositorySQLAlchemy.salvar_novo` faz `flush`, inclui o evento e confirma um único `commit`; `test_falha_ao_gravar_historico_desfaz_todo_o_commit` mostra o rollback. A transação é simples porque ambos permanecem no mesmo banco. |
+| RF-01 → ASR-02 → ADR-003 | Após gravar o chamado, o serviço pede confirmação pela interface `Notificador`. | `AbrirChamadoService.executar` recebe a implementação na inicialização e trata sua falha; `test_falha_de_notificacao_nao_desfaz_chamado` comprova a permanência do chamado. O custo é a chamada síncrona sem repetição automática. |
+| RF-02 → ASR-03 → ADR-001 | `Chamado.abrir` usa `MatrizPrioridade` para as combinações existentes de impacto e urgência. | `test_matriz_de_prioridade` cobre nove casos. A política fica isolada, mas não há versionamento formal; novos níveis exigiriam alterar enum e `PoliticaPrazo`. |
+
+No ensaio, abrir um chamado e mostrar no detalhe prioridade, prazo, equipe e evento.
+Em seguida, apontar o método de persistência e executar os testes. Não descrever
+uma simulação de erro como recurso visível na interface: o rollback e a falha da
+notificação são demonstrados pelos testes automatizados.

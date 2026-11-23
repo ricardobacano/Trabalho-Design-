@@ -31,6 +31,24 @@ O evento inicial é garantido pelo caso de uso de abertura e pela gravação con
 na transação. A associação ORM aceita estruturalmente zero ou mais eventos; o
 esquema do banco não impõe sozinho o mínimo de um evento por chamado.
 
+### Evolução conceitual: atendimento e interações
+
+O protótipo cria o chamado e seu evento de abertura. Para atender RF-07 e RF-08 na
+solução futura, o domínio precisará representar **Interacao**: mensagem vinculada
+a um chamado, com autor, conteúdo, data e visibilidade conforme o papel. Ela é
+diferente de **EventoHistorico**, que registra fatos da evolução do chamado, como
+abertura, assunção e mudança de estado. Nem a entidade `Interacao` nem as regras de
+visibilidade estão implementadas ou persistidas no protótipo.
+
+Uma evolução de estados coerente seria: a categoria sem equipe leva o chamado a
+**EM_TRIAGEM**; após o coordenador definir a equipe, ele entra em **EM_FILA**; um
+técnico autorizado assume e passa a **EM_ATENDIMENTO**; depois pode seguir para
+**RESOLVIDO** e **FECHADO**. A autorização por papel, as transições permitidas, o
+registro de seus eventos e as interações exigem novos casos de uso e testes. O
+código atual contém os nomes dos estados posteriores, mas só implementa as duas
+alternativas de estado inicial. Por isso, a figura de classes da fatia não apresenta
+`Interacao` como classe já implementada.
+
 ## 3. Distribuição de responsabilidades
 
 ### Abertura

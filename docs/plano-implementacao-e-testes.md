@@ -27,7 +27,7 @@ de atendimento por técnico. O usuário é fixo na configuração, sem login rea
 | RF-01 | Chamado.abrir e rota novo | test_resumo_obrigatorio_rejeita_abertura |
 | RF-02 / ASR-03 | MatrizPrioridade | test_matriz_de_prioridade, 9 casos |
 | RF-03 | CategoriaRepository e Chamado.abrir | test_categoria_sem_equipe_encaminha_para_triagem |
-| RF-04 / ASR-01 | ChamadoRepositorySQLAlchemy.salvar_novo | test_abertura_persiste_chamado_historico_e_notifica; test_falha_ao_gravar_historico_desfaz_todo_o_commit |
+| RF-04 / ASR-01 | ChamadoRepositorySQLAlchemy.salvar_novo | test_abertura_persiste_chamado_historico_e_notifica; test_falha_ao_gravar_historico_desfaz_todo_o_commit; test_sqlite_rejeita_historico_com_chamado_inexistente |
 | RF-05 | listar_por_solicitante e buscar_por_id_e_solicitante | test_consulta_exibe_apenas_chamados_do_usuario_demo; test_detalhe_de_outro_solicitante_retorna_404 |
 | RF-06 | PoliticaPrazo | test_politica_de_prazo, 4 casos |
 | ASR-02 | Notificador e NotificadorFake | testes de abertura e de falha da notificação |
@@ -47,10 +47,11 @@ de atendimento por técnico. O usuário é fixo na configuração, sem login rea
 5. rejeição de resumo vazio;
 6. gravação conjunta de chamado e histórico;
 7. rollback completo quando a gravação do histórico falha;
-8. chamada ao notificador;
-9. preservação do chamado quando a notificação falha;
-10. lista filtrada, sem incluir chamados de outro identificador de solicitante;
-11. acesso direto ao detalhe de outro solicitante respondido com HTTP 404.
+8. integridade referencial ativa no SQLite, rejeitando evento sem chamado;
+9. chamada ao notificador;
+10. preservação do chamado quando a notificação falha;
+11. lista filtrada, sem incluir chamados de outro identificador de solicitante;
+12. acesso direto ao detalhe de outro solicitante respondido com HTTP 404.
 
 ## 5. Limites
 

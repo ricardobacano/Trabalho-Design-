@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from flask import Flask
+from sqlalchemy import event
 
 from app.banco import db
 
@@ -33,6 +34,13 @@ def create_app(configuracao=None):
     from app.notificacoes.fake import NotificadorFake
 
     with app.app_context():
+        if db.engine.dialect.name == "sqlite":
+            @event.listens_for(db.engine, "connect")
+            def habilitar_chaves_estrangeiras(conexao, _registro):
+                cursor = conexao.cursor()
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.close()
+
         if app.config["CRIAR_BANCO"]:
             db.create_all()
         if app.config["CARREGAR_DADOS_INICIAIS"]:
