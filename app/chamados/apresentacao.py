@@ -15,7 +15,8 @@ def _usuario_demo():
     usuario = current_app.extensions["usuario_repository"].buscar_por_id(_usuario_id())
     if usuario is None:
         abort(404)
-    return usuario
+    else:
+        return usuario
 
 
 @chamados_bp.get("/")
@@ -72,14 +73,15 @@ def novo():
                 400,
             )
 
-    return render_template(
-        "chamados/novo.html",
-        usuario=usuario,
-        categorias=categorias,
-        impactos=Impacto,
-        urgencias=Urgencia,
-        dados={},
-    )
+    else:
+        return render_template(
+            "chamados/novo.html",
+            usuario=usuario,
+            categorias=categorias,
+            impactos=Impacto,
+            urgencias=Urgencia,
+            dados={},
+        )
 
 
 @chamados_bp.get("/chamados/<int:chamado_id>")
@@ -90,4 +92,5 @@ def detalhar(chamado_id: int):
     ].detalhar_do_solicitante(chamado_id, usuario.id)
     if chamado is None:
         abort(404)
-    return render_template("chamados/detalhe.html", usuario=usuario, chamado=chamado)
+    else:
+        return render_template("chamados/detalhe.html", usuario=usuario, chamado=chamado)

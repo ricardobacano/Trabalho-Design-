@@ -49,7 +49,9 @@ class MatrizPrioridade:
 
     @classmethod
     def calcular(cls, impacto: Impacto, urgencia: Urgencia) -> Prioridade:
-        return cls._matriz[(impacto, urgencia)]
+        combinacao = (impacto, urgencia)
+        prioridade = cls._matriz[combinacao]
+        return prioridade
 
 
 class PoliticaPrazo:
@@ -62,7 +64,9 @@ class PoliticaPrazo:
 
     @classmethod
     def calcular_prazo(cls, prioridade: Prioridade, criado_em: datetime) -> datetime:
-        return criado_em + timedelta(hours=cls._horas_por_prioridade[prioridade])
+        quantidade_horas = cls._horas_por_prioridade[prioridade]
+        prazo = criado_em + timedelta(hours=quantidade_horas)
+        return prazo
 
 
 @dataclass(frozen=True)
@@ -95,13 +99,23 @@ class Chamado:
         descricao_limpa = descricao.strip()
         if not resumo_limpo:
             raise RegraNegocioError("O resumo é obrigatório.")
-        if not descricao_limpa:
-            raise RegraNegocioError("A descrição é obrigatória.")
+        else:
+            if not descricao_limpa:
+                raise RegraNegocioError("A descrição é obrigatória.")
 
-        instante = criado_em or datetime.now(timezone.utc)
+        if criado_em is None:
+            instante = datetime.now(timezone.utc)
+        else:
+            instante = criado_em
+
         prioridade = MatrizPrioridade.calcular(impacto, urgencia)
-        estado = EstadoChamado.EM_FILA if equipe_id is not None else EstadoChamado.EM_TRIAGEM
-        return cls(
+        if equipe_id is not None:
+            estado = EstadoChamado.EM_FILA
+        else:
+            estado = EstadoChamado.EM_TRIAGEM
+
+        prazo_atendimento = PoliticaPrazo.calcular_prazo(prioridade, instante)
+        chamado = cls(
             solicitante_id=solicitante_id,
             categoria_id=categoria_id,
             equipe_id=equipe_id,
@@ -112,8 +126,9 @@ class Chamado:
             prioridade=prioridade,
             estado=estado,
             criado_em=instante,
-            prazo_atendimento=PoliticaPrazo.calcular_prazo(prioridade, instante),
+            prazo_atendimento=prazo_atendimento,
         )
+        return chamado
 
 
 @dataclass(frozen=True)
@@ -124,8 +139,11 @@ class EventoHistorico:
 
     @classmethod
     def abertura(cls, chamado: Chamado, categoria_nome: str, equipe_nome: str | None):
-        destino = equipe_nome or "fila de triagem"
-        return cls(
+        if equipe_nome:
+            destino = equipe_nome
+        else:
+            destino = "fila de triagem"
+        evento = cls(
             tipo="CHAMADO_ABERTO",
             descricao=(
                 f"Chamado aberto na categoria {categoria_nome}; "
@@ -133,3 +151,4 @@ class EventoHistorico:
             ),
             criado_em=chamado.criado_em,
         )
+        return evento

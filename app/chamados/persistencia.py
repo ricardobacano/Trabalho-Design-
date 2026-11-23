@@ -72,11 +72,16 @@ class ChamadoDetalhe(ChamadoResumo):
 
 
 def _resumo(registro: ChamadoModel) -> ChamadoResumo:
+    if registro.equipe is not None:
+        nome_equipe = registro.equipe.nome
+    else:
+        nome_equipe = "Triagem"
+
     return ChamadoResumo(
         id=registro.id,
         resumo=registro.resumo,
         categoria=registro.categoria.nome,
-        equipe=registro.equipe.nome if registro.equipe else "Triagem",
+        equipe=nome_equipe,
         prioridade=registro.prioridade,
         estado=registro.estado,
         criado_em=registro.criado_em,
@@ -122,7 +127,12 @@ class ChamadoRepositorySQLAlchemy:
             .where(ChamadoModel.solicitante_id == solicitante_id)
             .order_by(ChamadoModel.criado_em.desc())
         ).scalars()
-        return [_resumo(registro) for registro in registros]
+        chamados = []
+        for registro in registros:
+            resumo = _resumo(registro)
+            chamados.append(resumo)
+
+        return chamados
 
     def buscar_por_id_e_solicitante(
         self, chamado_id: int, solicitante_id: int
@@ -135,18 +145,23 @@ class ChamadoRepositorySQLAlchemy:
         ).scalar_one_or_none()
         if registro is None:
             return None
-        resumo = _resumo(registro)
-        return ChamadoDetalhe(
+        else:
+            resumo = _resumo(registro)
+
+        eventos = []
+        for evento in registro.historico:
+            resumo_evento = HistoricoResumo(
+                tipo=evento.tipo,
+                descricao=evento.descricao,
+                criado_em=evento.criado_em,
+            )
+            eventos.append(resumo_evento)
+
+        detalhe = ChamadoDetalhe(
             **resumo.__dict__,
             descricao=registro.descricao,
             impacto=registro.impacto,
             urgencia=registro.urgencia,
-            historico=tuple(
-                HistoricoResumo(
-                    tipo=evento.tipo,
-                    descricao=evento.descricao,
-                    criado_em=evento.criado_em,
-                )
-                for evento in registro.historico
-            ),
+            historico=tuple(eventos),
         )
+        return detalhe
